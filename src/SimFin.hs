@@ -23,6 +23,8 @@ import qualified Data.ByteString.UTF8 as BSU
 import Data.Function ((&))
 import Data.Maybe (fromJust)
 import Data.Text (Text)
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 import Network.HTTP.Client
 import Network.HTTP.Client.TLS
 import System.Environment (lookupEnv)
@@ -148,3 +150,14 @@ companyInformationById :: (MonadThrow m, MonadIO m) => SimFinContext -> [Int] ->
 companyInformationById ctx ids =
   fmap unKeyedCompanyInfo <$> performRequest ctx "companies/general"
     [ ("id", Just $ BS8.intercalate "," $ BS8.pack . show <$> ids) ]
+
+companyInformationByTicker :: (MonadThrow m, MonadIO m) => SimFinContext -> [Text] -> m [CompanyInformation]
+companyInformationByTicker ctx tickers =
+  fmap unKeyedCompanyInfo <$> performRequest ctx "companies/general"
+    [ ("ticker", Just $ T.encodeUtf8 $ T.intercalate "," tickers) ]
+
+test :: IO ()
+test = do
+  ctx <- createDefaultContext
+  print =<< companyInformationByTicker ctx ["AAPL"]
+  pure ()
