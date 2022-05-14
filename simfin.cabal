@@ -23,6 +23,7 @@ library
                     , text
     hs-source-dirs:   src
     default-language: Haskell2010
+    ghc-options:      -Wall
 
 test-suite simfin-test
     default-language: Haskell2010

@@ -1,5 +1,6 @@
-{-# LANGUAGE ApplicativeDo #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE NamedFieldPuns #-}
 
@@ -7,10 +8,9 @@ module SimFin
   ( SimFinContext(..)
   , createDefaultContext
   , listCompanies
+  , companyInformationById
   ) where
 
-import Control.Category ((>>>))
-import Control.Monad (forM)
 import Control.Monad.IO.Class
 import Control.Monad.Catch
 import Data.Aeson
@@ -18,20 +18,14 @@ import Data.Aeson.Types (Parser)
 import qualified Data.Aeson.Key as K
 import qualified Data.Aeson.KeyMap as KM
 import Data.ByteString (ByteString)
-import qualified Data.ByteString.Lazy as LBS
+import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.UTF8 as BSU
-import qualified Data.ByteString as BS
 import Data.Function ((&))
-import Data.Functor ((<&>))
 import Data.Maybe (fromJust)
-import Data.String
 import Data.Text (Text)
 import Network.HTTP.Client
 import Network.HTTP.Client.TLS
-import Network.HTTP.Types.Header (RequestHeaders)
 import System.Environment (lookupEnv)
-
-type SimFinId = Int
 
 type QueryParam = (ByteString, Maybe ByteString)
 
@@ -64,10 +58,39 @@ baseRequest = defaultRequest
 basePath :: ByteString
 basePath = "/api/v2/"
 
-makeRequest :: SimFinContext -> ByteString -> [QueryParam] -> Request
-makeRequest SimFinContext{simFinApiKey} path query =
+makeRequest :: ByteString -> ByteString -> [QueryParam] -> Request
+makeRequest apiKey path query =
   baseRequest { path = basePath <> path }
-  & setQueryString (("api-key", Just simFinApiKey) : query)
+  & setQueryString (("api-key", Just apiKey) : query)
+
+performRequest
+  :: ( MonadIO m
+     , FromJSON a
+     )
+  => SimFinContext
+  -> ByteString
+  -> [QueryParam]
+  -> m a
+performRequest SimFinContext{..} path query = do
+  let req = makeRequest simFinApiKey path query
+  res <- liftIO $ httpLbs req simFinManager
+  pure $ fromJust $ decode $ responseBody res
+
+createKeyedRows :: Value -> Parser [Value]
+createKeyedRows = withObject "Root" $ \root -> do
+  cols :: [Key] <- fmap K.fromText <$> root .: "columns"
+  rows :: [[Value]] <- root .: "data"
+  pure $ Object . KM.fromList . zip cols <$> rows
+
+createKeyedRow :: Value -> Parser Value
+createKeyedRow = withObject "Root" $ \root -> do
+  cols :: [Key] <- fmap K.fromText <$> root .: "columns"
+  row :: [Value] <- root .: "data"
+  pure $ Object $ KM.fromList $ zip cols row
+
+------
+-- List companies
+------
 
 data CompanyListingRow
   = CompanyListingRow
@@ -77,30 +100,51 @@ data CompanyListingRow
 
 type CompanyListing = [CompanyListingRow]
 
-newtype CompanyListingColumnar = CompanyListingColumnar { unColumns :: CompanyListing }
+newtype CompanyListingKeyed = CompanyListingKeyed { unKeyedCompanyListing :: CompanyListing }
 
 instance FromJSON CompanyListingRow where
-  parseJSON (Object v) = CompanyListingRow
+  parseJSON = withObject "CompanyListing" $ \v -> CompanyListingRow
     <$> v .: "SimFinId"
     <*> v .: "Ticker"
 
-columnsToRows :: Value -> Parser [Value]
-columnsToRows (Object root) = do
-  cols :: [Key] <- fmap K.fromText <$> root .: "columns"
-  rows :: [[Value]] <- root .: "data"
-  pure $ Object . KM.fromList . zip cols <$> rows
-
-instance FromJSON CompanyListingColumnar where
-  parseJSON o = CompanyListingColumnar <$> (traverse parseJSON =<< columnsToRows o)
+instance FromJSON CompanyListingKeyed where
+  parseJSON o = CompanyListingKeyed <$> (traverse parseJSON =<< createKeyedRows o)
 
 listCompanies :: (MonadThrow m, MonadIO m) => SimFinContext -> m CompanyListing
-listCompanies ctx@SimFinContext{simFinManager} = do
-  let req = makeRequest ctx "companies/list" []
-  res <- liftIO $ httpLbs req simFinManager
-  pure $ fromJust $ unColumns <$> decode (responseBody res)
+listCompanies ctx =
+  unKeyedCompanyListing <$> performRequest ctx "companies/list" []
 
-test :: IO ()
-test = do
-  ctx <- createDefaultContext
-  print =<< listCompanies ctx
-  pure ()
+------
+-- General Company Info
+------
+
+data CompanyInformation
+  = CompanyInformation
+  { simFinId :: Int
+  , ticker :: Text
+  , companyName :: Text
+  , industryId :: Int
+  , monthFYEnd :: Int
+  , numberEmployees :: Int
+  , businessSummary :: Text
+  } deriving Show
+
+newtype CompanyInfoKeyed = CompanyInfoKeyed { unKeyedCompanyInfo :: CompanyInformation }
+
+instance FromJSON CompanyInformation where
+  parseJSON = withObject "CompanyInformation" $ \v -> CompanyInformation
+    <$> v .: "SimFinId"
+    <*> v .: "Ticker"
+    <*> v .: "Company Name"
+    <*> v .: "IndustryId"
+    <*> v .: "Month FY End"
+    <*> v .: "Number Employees"
+    <*> v .: "Business Summary"
+
+instance FromJSON CompanyInfoKeyed where
+  parseJSON o = CompanyInfoKeyed <$> (parseJSON =<< createKeyedRow o)
+
+companyInformationById :: (MonadThrow m, MonadIO m) => SimFinContext -> [Int] -> m [CompanyInformation]
+companyInformationById ctx ids =
+  fmap unKeyedCompanyInfo <$> performRequest ctx "companies/general"
+    [ ("id", Just $ BS8.intercalate "," $ BS8.pack . show <$> ids) ]
