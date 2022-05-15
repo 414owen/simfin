@@ -1,6 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE FlexibleInstances#-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE NamedFieldPuns #-}
@@ -36,6 +36,7 @@ module SimFin
   ) where
 
 import Control.Applicative ((<|>))
+import Control.Arrow
 import Control.Monad.IO.Class
 import Control.Monad.Catch
 import Data.Aeson
@@ -45,8 +46,10 @@ import qualified Data.Aeson.KeyMap as KM
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.UTF8 as BSU
+import Data.List.NonEmpty (NonEmpty)
 import Data.Time.Calendar (Day)
 import Data.Function ((&))
+import Data.List
 import Data.Maybe (fromJust)
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -236,6 +239,55 @@ fetchCompanyInformationByTicker :: (MonadThrow m, MonadIO m) => SimFinContext ->
 fetchCompanyInformationByTicker ctx tickers =
   fmap unKeyCompanyInfo <$> performRequest ctx "companies/general"
     [ ("ticker", Just $ T.encodeUtf8 $ T.intercalate "," tickers) ]
+
+data StockRef = SimFinId Int | Ticker Text
+  deriving Show
+
+separateStockRefs :: Foldable t => t StockRef -> ([Int], [Text])
+separateStockRefs = foldl' f ([], [])
+  where
+    f :: ([Int], [Text]) -> StockRef -> ([Int], [Text])
+    f acc (SimFinId n) = first (n:) acc
+    f acc (Ticker t) = second (t:) acc
+
+data StatementQuery
+  = StatementQuery
+  { stockRefs :: NonEmpty StockRef
+  , periods :: [FiscalPeriod]
+  , years :: [Int]
+  , start :: Maybe Day
+  , end :: Maybe Day
+  , ttm :: Bool
+  , asReported :: Bool
+  , shares :: Bool
+  } deriving Show
+
+statementQueryToQueryParams :: StatementQuery -> [(ByteString, Maybe ByteString)]
+statementQueryToQueryParams StatementQuery{..} =
+  let
+    (ids, tickers) = separateStockRefs stockRefs
+    idParam = if ids == [] then [] else [("id", Just $ BS8.intercalate "," $ BS8.pack . show <$> ids)]
+    tickerParam = if tickers == [] then [] else [("id", Just $ BS8.intercalate "," $ T.encodeUtf8 <$> tickers)]
+    startParam = maybe [] (\a -> [("start", Just $ BS8.pack $ show a)]) start
+    endParam = maybe [] (\a -> [("start", Just $ BS8.pack $ show a)]) end
+    periodParam = if periods == [] then [] else [("period", Just $ BS8.intercalate "," $ fiscalPeriodParam <$> periods)]
+    yearParam = if years == [] then [] else [("fyear", Just $ BS8.intercalate "," $ BS8.pack . show <$> years)]
+    ttmParam = if ttm then [("ttm", Nothing)] else []
+    asReportedParam = if asReported then [("asreported", Nothing)] else []
+    sharesParam = if shares then [("shares", Nothing)] else []
+  in
+  mconcat
+    [ tickerParam
+    , idParam
+    , startParam
+    , endParam
+    , periodParam
+    , yearParam
+    , ttmParam
+    , asReportedParam
+    , sharesParam
+    ]
+
 
 ------
 -- Balance Sheets
@@ -1761,6 +1813,6 @@ test = do
   -- print =<< fetchCashFlowsByTicker ctx ["GOOG"] FullYear 2020
   -- print =<< fetchCashFlowsByTicker ctx ["C"] FullYear 2020
   -- print =<< fetchCashFlowsByTicker ctx ["CB"] FullYear 2020
-  print =<< fetchDerivedByTicker ctx ["AAPL"] FullYear 2020
+  -- print =<< fetchDerivedByTicker ctx ["AAPL"] FullYear 2020
   pure ()
 
