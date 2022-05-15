@@ -1,5 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances#-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE NamedFieldPuns #-}
@@ -12,8 +13,11 @@ module SimFin
   , InsuranceBalanceSheetRow(..)
   , Industry(..)
   , createDefaultContext
-  , listCompanies
-  , companyInformationById
+  , fetchCompanyList
+  , fetchCompanyInformationById
+  , fetchCompanyInformationByTicker
+  , fetchBalanceSheetsByTicker
+  , fetchProfitsAndLossesByTicker
   ) where
 
 import Control.Applicative ((<|>))
@@ -152,15 +156,6 @@ mapIndustry f g h industry = case industry of
   Bank a -> Bank $ g a
   Insurance a -> Insurance $ h a
 
-
--- Proofs that this parsing order works for all cases:
--- in P&L, |General| > |Insurance| > |Bank|
--- in Balance Sheets, |General| > |Bank| > |Insurance|, and Insurance has "Life Policy benefits"
-instance (FromJSON a, FromJSON b, FromJSON c) => FromJSON (Industry a b c) where
-  parseJSON json = General <$> parseJSON json
-    <|> Insurance <$> parseJSON json
-    <|> Bank <$> parseJSON json
-
 ------
 -- List companies
 ------
@@ -183,8 +178,8 @@ instance FromJSON CompanyListingRow where
 instance FromJSON CompanyListingKeyed where
   parseJSON o = CompanyListingKeyed <$> (traverse parseJSON =<< createKeyedRows o)
 
-listCompanies :: (MonadThrow m, MonadIO m) => SimFinContext -> m CompanyListing
-listCompanies ctx =
+fetchCompanyList :: (MonadThrow m, MonadIO m) => SimFinContext -> m CompanyListing
+fetchCompanyList ctx =
   unKeyCompanyListing <$> performRequest ctx "companies/list" []
 
 ------
@@ -217,13 +212,13 @@ instance FromJSON CompanyInformation where
 instance FromJSON CompanyInfoKeyed where
   parseJSON o = CompanyInfoKeyed <$> (parseJSON =<< createKeyedRow o)
 
-companyInformationById :: (MonadThrow m, MonadIO m) => SimFinContext -> [Int] -> m [CompanyInformation]
-companyInformationById ctx ids =
+fetchCompanyInformationById :: (MonadThrow m, MonadIO m) => SimFinContext -> [Int] -> m [CompanyInformation]
+fetchCompanyInformationById ctx ids =
   fmap unKeyCompanyInfo <$> performRequest ctx "companies/general"
     [ ("id", Just $ BS8.intercalate "," $ BS8.pack . show <$> ids) ]
 
-companyInformationByTicker :: (MonadThrow m, MonadIO m) => SimFinContext -> [Text] -> m [CompanyInformation]
-companyInformationByTicker ctx tickers =
+fetchCompanyInformationByTicker :: (MonadThrow m, MonadIO m) => SimFinContext -> [Text] -> m [CompanyInformation]
+fetchCompanyInformationByTicker ctx tickers =
   fmap unKeyCompanyInfo <$> performRequest ctx "companies/general"
     [ ("ticker", Just $ T.encodeUtf8 $ T.intercalate "," tickers) ]
 
@@ -733,14 +728,20 @@ type IndustryBalanceSheetsKeyed
 type IndustryBalanceSheets
   = Industry [GeneralBalanceSheetRow] [BankBalanceSheetRow] [InsuranceBalanceSheetRow]
 
+-- in Balance Sheets |General| > |Bank| > |Insurance|, and Insurance has "Life Policy benefits"
+instance FromJSON (Industry GeneralBalanceSheetsKeyed BankBalanceSheetsKeyed InsuranceBalanceSheetsKeyed) where
+  parseJSON json = General <$> parseJSON json
+    <|> Bank <$> parseJSON json
+    <|> Insurance <$> parseJSON json
+
 unKeyIndustryBalanceSheets :: IndustryBalanceSheetsKeyed -> IndustryBalanceSheets
 unKeyIndustryBalanceSheets = mapIndustry
   unKeyGeneralBalanceSheets
   unKeyBankBalanceSheets
   unKeyInsuranceBalanceSheets
 
-balanceSheetsByTicker :: (MonadThrow m, MonadIO m) => SimFinContext -> [Text] -> FiscalPeriod -> Int -> m [IndustryBalanceSheets]
-balanceSheetsByTicker ctx tickers period year =
+fetchBalanceSheetsByTicker :: (MonadThrow m, MonadIO m) => SimFinContext -> [Text] -> FiscalPeriod -> Int -> m [IndustryBalanceSheets]
+fetchBalanceSheetsByTicker ctx tickers period year =
   fmap unKeyIndustryBalanceSheets <$> performRequest ctx "companies/statements"
     [ ("ticker", Just $ T.encodeUtf8 $ T.intercalate "," tickers)
     , ("statement", Just "bs")
@@ -1150,49 +1151,52 @@ instance FromJSON InsuranceProfitAndLossRow where
     <*> v .: "Other Adjustments"
     <*> v .: "Net Income (Common)"
 
-newtype GeneralProfitAndLossesKeyed = GeneralProfitAndLossesKeyed { unKeyGeneralProfitAndLosses :: [GeneralProfitAndLossRow] }
+newtype GeneralProfitsAndLossesKeyed = GeneralProfitsAndLossesKeyed { unKeyGeneralProfitsAndLosses :: [GeneralProfitAndLossRow] }
 
-instance FromJSON GeneralProfitAndLossesKeyed where
-  parseJSON o = GeneralProfitAndLossesKeyed <$> (traverse parseJSON =<< createKeyedRows o)
+instance FromJSON GeneralProfitsAndLossesKeyed where
+  parseJSON o = GeneralProfitsAndLossesKeyed <$> (traverse parseJSON =<< createKeyedRows o)
 
-newtype BankProfitAndLossesKeyed = BankProfitAndLossesKeyed { unKeyBankProfitAndLosses :: [BankProfitAndLossRow] }
+newtype BankProfitsAndLossesKeyed = BankProfitsAndLossesKeyed { unKeyBankProfitsAndLosses :: [BankProfitAndLossRow] }
 
-instance FromJSON BankProfitAndLossesKeyed where
-  parseJSON o = BankProfitAndLossesKeyed <$> (traverse parseJSON =<< createKeyedRows o)
+instance FromJSON BankProfitsAndLossesKeyed where
+  parseJSON o = BankProfitsAndLossesKeyed <$> (traverse parseJSON =<< createKeyedRows o)
 
-newtype InsuranceProfitAndLossesKeyed = InsuranceProfitAndLossesKeyed { unKeyInsuranceProfitAndLosses :: [InsuranceProfitAndLossRow] }
+newtype InsuranceProfitsAndLossesKeyed = InsuranceProfitsAndLossesKeyed { unKeyInsuranceProfitsAndLosses :: [InsuranceProfitAndLossRow] }
 
-instance FromJSON InsuranceProfitAndLossesKeyed where
-  parseJSON o = InsuranceProfitAndLossesKeyed <$> (traverse parseJSON =<< createKeyedRows o)
+instance FromJSON InsuranceProfitsAndLossesKeyed where
+  parseJSON o = InsuranceProfitsAndLossesKeyed <$> (traverse parseJSON =<< createKeyedRows o)
 
-type IndustryProfitAndLossesKeyed
-  = Industry GeneralProfitAndLossesKeyed BankProfitAndLossesKeyed InsuranceProfitAndLossesKeyed
+type IndustryProfitsAndLossesKeyed
+  = Industry GeneralProfitsAndLossesKeyed BankProfitsAndLossesKeyed InsuranceProfitsAndLossesKeyed
 
-type IndustryProfitAndLosses
+type IndustryProfitsAndLosses
   = Industry [GeneralProfitAndLossRow] [BankProfitAndLossRow] [InsuranceProfitAndLossRow]
 
-unKeyIndustryProfitAndLosses :: IndustryProfitAndLossesKeyed -> IndustryProfitAndLosses
-unKeyIndustryProfitAndLosses = mapIndustry
-  unKeyGeneralProfitAndLosses
-  unKeyBankProfitAndLosses
-  unKeyInsuranceProfitAndLosses
+unKeyIndustryProfitsAndLosses :: IndustryProfitsAndLossesKeyed -> IndustryProfitsAndLosses
+unKeyIndustryProfitsAndLosses = mapIndustry
+  unKeyGeneralProfitsAndLosses
+  unKeyBankProfitsAndLosses
+  unKeyInsuranceProfitsAndLosses
 
-profitAndLossesByTicker :: (MonadThrow m, MonadIO m) => SimFinContext -> [Text] -> FiscalPeriod -> Int -> m [IndustryProfitAndLosses]
-profitAndLossesByTicker ctx tickers period year =
-  fmap unKeyIndustryProfitAndLosses <$> performRequest ctx "companies/statements"
+fetchProfitsAndLossesByTicker :: (MonadThrow m, MonadIO m) => SimFinContext -> [Text] -> FiscalPeriod -> Int -> m [IndustryProfitsAndLosses]
+fetchProfitsAndLossesByTicker ctx tickers period year =
+  fmap unKeyIndustryProfitsAndLosses <$> performRequest ctx "companies/statements"
     [ ("ticker", Just $ T.encodeUtf8 $ T.intercalate "," tickers)
     , ("statement", Just "pl")
     , ("period", Just $ fiscalPeriodParam period)
     , ("fyear", Just $ BS8.pack $ show year)
     ]
 
+
+
 test :: IO ()
 test = do
   ctx <- createDefaultContext
   -- print =<< generalBalanceSheetByTicker ctx ["AAPL"] Q1 2022
   -- print =<< generalBalanceSheetByTicker ctx ["C"] Q1 2022
-  -- print =<< balanceSheetsByTicker ctx ["CB"] Q1 2022
-  -- print =<< profitAndLossesByTicker ctx ["GOOG"] FullYear 2020
-  -- print =<< profitAndLossesByTicker ctx ["C"] FullYear 2020
-  -- print =<< profitAndLossesByTicker ctx ["CB"] FullYear 2020
+  -- print =<< fetchBalanceSheetsByTicker ctx ["CB"] Q1 2022
+  -- print =<< profitsAndLossesByTicker ctx ["GOOG"] FullYear 2020
+  -- print =<< profitsAndLossesByTicker ctx ["C"] FullYear 2020
+  -- print =<< profitsAndLossesByTicker ctx ["CB"] FullYear 2020
   pure ()
+
