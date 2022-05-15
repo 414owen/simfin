@@ -22,6 +22,8 @@ module SimFin
   , BankCashFlowRow(..)
   , InsuranceCashFlowRow(..)
 
+  , DerivedRow(..)
+
   , createDefaultContext
   , fetchCompanyList
 
@@ -30,13 +32,14 @@ module SimFin
   , fetchBalanceSheetsByTicker
   , fetchProfitsAndLossesByTicker
   , fetchCashFlowsByTicker
+  , fetchDerivedByTicker
   ) where
 
 import Control.Applicative ((<|>))
 import Control.Monad.IO.Class
 import Control.Monad.Catch
 import Data.Aeson
-import Data.Aeson.Types (Parser)
+import Data.Aeson.Types (Parser, typeMismatch)
 import qualified Data.Aeson.Key as K
 import qualified Data.Aeson.KeyMap as KM
 import Data.ByteString (ByteString)
@@ -740,7 +743,6 @@ type IndustryBalanceSheetsKeyed
 type IndustryBalanceSheets
   = Industry [GeneralBalanceSheetRow] [BankBalanceSheetRow] [InsuranceBalanceSheetRow]
 
--- in Balance Sheets |General| > |Bank| > |Insurance|, and Insurance has "Life Policy benefits"
 instance FromJSON (Industry GeneralBalanceSheetsKeyed BankBalanceSheetsKeyed InsuranceBalanceSheetsKeyed) where
   parseJSON json = General <$> parseJSON json
     <|> Bank <$> parseJSON json
@@ -1184,7 +1186,6 @@ type IndustryProfitsAndLossesKeyed
 type IndustryProfitsAndLosses
   = Industry [GeneralProfitAndLossRow] [BankProfitAndLossRow] [InsuranceProfitAndLossRow]
 
--- in Balance Sheets |General| > |Insurance| > |Bank| and Insurance has "Life Policy benefits"
 instance FromJSON (Industry GeneralProfitsAndLossesKeyed BankProfitsAndLossesKeyed InsuranceProfitsAndLossesKeyed) where
   parseJSON json = General <$> parseJSON json
     <|> Insurance <$> parseJSON json
@@ -1621,11 +1622,10 @@ type IndustryCashFlowsKeyed
 type IndustryCashFlows
   = Industry [GeneralCashFlowRow] [BankCashFlowRow] [InsuranceCashFlowRow]
 
--- in Balance Sheets |General| > |Insurance| > |Bank| and Insurance has "Life Policy benefits"
 instance FromJSON (Industry GeneralCashFlowsKeyed BankCashFlowsKeyed InsuranceCashFlowsKeyed) where
-  parseJSON json = General <$> parseJSON json
-    <|> Insurance <$> parseJSON json
+  parseJSON json = Insurance <$> parseJSON json
     <|> Bank <$> parseJSON json
+    <|> General <$> parseJSON json
 
 unKeyIndustryCashFlows :: IndustryCashFlowsKeyed -> IndustryCashFlows
 unKeyIndustryCashFlows = mapIndustry
@@ -1642,6 +1642,113 @@ fetchCashFlowsByTicker ctx tickers period year =
     , ("fyear", Just $ BS8.pack $ show year)
     ]
 
+------
+-- Derived
+------
+
+newtype StringFrac a = StringFrac { unFloat :: a }
+  deriving Show
+
+instance (Read a, RealFrac a) => FromJSON (StringFrac a) where
+  parseJSON (String s) = pure $ StringFrac $ read $ T.unpack s
+  parseJSON (Number n) = pure $ StringFrac $ realToFrac n
+  parseJSON v = typeMismatch "Number or String" v
+
+data DerivedRow a
+  = DerivedRow
+  { simFinId :: Int
+  , ticker :: Text
+  , fiscalPeriod :: String
+  , fiscalYear :: Int
+  , reportDate :: Day
+  , publishDate :: Day
+  , restatedDate :: Day
+  , source :: Text
+  , tTM :: Bool
+  , valueCheck :: Bool
+  , eBITDA :: Maybe (StringFrac a)
+  , totalDebt :: Maybe (StringFrac a)
+  , freeCashFlow :: Maybe (StringFrac a)
+  , grossProfitMargin :: Maybe (StringFrac a)
+  , operatingMargin :: Maybe (StringFrac a)
+  , netProfitMargin :: Maybe (StringFrac a)
+  , returnOnEquity :: Maybe (StringFrac a)
+  , returnOnAssets :: Maybe (StringFrac a)
+  , freeCashFlowToNetIncome :: Maybe (StringFrac a)
+  , currentRatio :: Maybe (StringFrac a)
+  , liabilitiesToEquityRatio :: Maybe (StringFrac a)
+  , debtRatio :: Maybe (StringFrac a)
+  , earningsPerShareBasic :: Maybe (StringFrac a)
+  , earningsPerShareDiluted :: Maybe (StringFrac a)
+  , salesPerShare :: Maybe (StringFrac a)
+  , equityPerShare :: Maybe (StringFrac a)
+  , freeCashFlowPerShare :: Maybe (StringFrac a)
+  , dividendsPerShare :: Maybe (StringFrac a)
+  , piotroskiFScore :: Maybe Int
+  , returnOnInvestedCapital :: Maybe (StringFrac a)
+  , cashReturnOnInvestedCapital :: Maybe (StringFrac a)
+  , dividendPayoutRatio :: Maybe (StringFrac a)
+  , netDebtEBITDA :: Maybe (StringFrac a)
+  , netDebtEBIT :: Maybe (StringFrac a)
+  } deriving Show
+
+instance (Read a, RealFrac a) => FromJSON (DerivedRow a) where
+  parseJSON = withObject "DerivedRow" $ \v -> DerivedRow
+    <$> v .: "SimFinId"
+    <*> v .: "Ticker"
+    <*> v .: "Fiscal Period"
+    <*> v .: "Fiscal Year"
+    <*> v .: "Report Date"
+    <*> v .: "Publish Date"
+    <*> v .: "Restated Date"
+    <*> v .: "Source"
+    <*> v .: "TTM"
+    <*> v .: "Value Check"
+    <*> v .: "EBITDA"
+    <*> v .: "Total Debt"
+    <*> v .: "Free Cash Flow"
+    <*> v .: "Gross Profit Margin"
+    <*> v .: "Operating Margin"
+    <*> v .: "Net Profit Margin"
+    <*> v .: "Return on Equity"
+    <*> v .: "Return on Assets"
+    <*> v .: "Free Cash Flow to Net Income"
+    <*> v .: "Current Ratio"
+    <*> v .: "Liabilities to Equity Ratio"
+    <*> v .: "Debt Ratio"
+    <*> v .: "Earnings Per Share, Basic"
+    <*> v .: "Earnings Per Share, Diluted"
+    <*> v .: "Sales Per Share"
+    <*> v .: "Equity Per Share"
+    <*> v .: "Free Cash Flow Per Share"
+    <*> v .: "Dividends Per Share"
+    <*> v .: "Piotroski F-Score"
+    <*> v .: "Return On Invested Capital"
+    <*> v .: "Cash Return On Invested Capital"
+    <*> v .: "Dividend Payout Ratio"
+    <*> v .: "Net Debt / EBITDA"
+    <*> v .: "Net Debt / EBIT"
+
+newtype DerivedKeyed a = DerivedKeyed { unKeyDerived :: [DerivedRow a] }
+
+instance (Read a, RealFrac a) => FromJSON (DerivedKeyed a) where
+  parseJSON o = DerivedKeyed <$> (traverse parseJSON =<< createKeyedRows o)
+
+fetchDerivedByTicker
+  :: (Read a, RealFrac a, MonadThrow m, MonadIO m)
+  => SimFinContext
+  -> [Text]
+  -> FiscalPeriod
+  -> Int
+  -> m [[DerivedRow a]]
+fetchDerivedByTicker ctx tickers period year =
+  fmap unKeyDerived <$> performRequest ctx "companies/statements"
+    [ ("ticker", Just $ T.encodeUtf8 $ T.intercalate "," tickers)
+    , ("statement", Just "derived")
+    , ("period", Just $ fiscalPeriodParam period)
+    , ("fyear", Just $ BS8.pack $ show year)
+    ]
+
 test :: IO ()
 test = do
   ctx <- createDefaultContext
@@ -1651,8 +1758,9 @@ test = do
   -- print =<< fetchProfitsAndLossesByTicker ctx ["GOOG"] FullYear 2020
   -- print =<< fetchProfitsAndLossesByTicker ctx ["C"] FullYear 2020
   -- print =<< fetchProfitsAndLossesByTicker ctx ["CB"] FullYear 2020
-  print =<< fetchCashFlowsByTicker ctx ["GOOG"] FullYear 2020
-  print =<< fetchCashFlowsByTicker ctx ["C"] FullYear 2020
-  print =<< fetchCashFlowsByTicker ctx ["CB"] FullYear 2020
+  -- print =<< fetchCashFlowsByTicker ctx ["GOOG"] FullYear 2020
+  -- print =<< fetchCashFlowsByTicker ctx ["C"] FullYear 2020
+  -- print =<< fetchCashFlowsByTicker ctx ["CB"] FullYear 2020
+  print =<< fetchDerivedByTicker ctx ["AAPL"] FullYear 2020
   pure ()
 
