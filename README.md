@@ -1,5 +1,7 @@
 # SimFin API wrapper for Haskell
 
+See [simfin.com](https://simfin.com/)
+
 Pre-alpha, expect frequent breaking changes.
 
 No SimFin+ features have been tested at all yet.
