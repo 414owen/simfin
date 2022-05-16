@@ -13,7 +13,7 @@ No SimFin+ features have been tested at all yet.
 * Differentiate between ticker/id missing vs. time period missing
 * Expose currency in Price data
 * Move tests to test suite
-  * Requres making an Internal module?
+  * Requires making an Internal module?
 * Add CI
 * Add examples (with charts?)
 * Add documentation
