@@ -1,5 +1,7 @@
 # SimFin API wrapper for Haskell
 
+Pre-alpha, expect frequent breaking changes.
+
 ## TODO:
 
 * Handle upgrade prompt answers
