@@ -24,36 +24,42 @@ module SimFin
 
   , DerivedRow(..)
 
+  , PricesRow(..)
+  , RatiosRow(..)
+  , PricesAndRatiosRow(..)
+
   , createDefaultContext
   , fetchCompanyList
 
-  , fetchCompanyInformationById
-  , fetchCompanyInformationByTicker
-  , fetchBalanceSheetsByTicker
-  , fetchProfitsAndLossesByTicker
-  , fetchCashFlowsByTicker
-  , fetchDerivedByTicker
+  , fetchCompanyInformation
+  , fetchBalanceSheets
+  , fetchProfitsAndLosses
+  , fetchCashFlows
+  , fetchDerived
+  , fetchPrices
+  , fetchPricesAndRatios
   ) where
 
 import Control.Applicative ((<|>))
 import Control.Arrow
-import Control.Monad.IO.Class
 import Control.Monad.Catch
+import Control.Monad.IO.Class
 import Data.Aeson
-import Data.Aeson.Types (Parser, typeMismatch)
 import qualified Data.Aeson.Key as K
 import qualified Data.Aeson.KeyMap as KM
+import Data.Aeson.Types (Parser, typeMismatch)
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.UTF8 as BSU
-import Data.List.NonEmpty (NonEmpty)
-import Data.Time.Calendar (Day)
 import Data.Function ((&))
 import Data.List
-import Data.Maybe (fromJust)
+import Data.List.NonEmpty (NonEmpty)
+import qualified Data.List.NonEmpty as NE
+import Data.Maybe (fromJust, maybeToList)
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
+import Data.Time.Calendar (Day)
 import Network.HTTP.Client
 import Network.HTTP.Client.TLS
 import System.Environment (lookupEnv)
@@ -107,7 +113,6 @@ performRequest SimFinContext{..} path query = do
   res <- liftIO $ httpLbs req simFinManager
   pure $ fromJust $ decode $ responseBody res
 
-{-
 debugRequest
   :: ( MonadIO m
      , FromJSON a
@@ -115,12 +120,16 @@ debugRequest
   => SimFinContext
   -> ByteString
   -> [QueryParam]
-  -> m (Either String a)
+  -> m a
 debugRequest SimFinContext{..} path query = do
   let req = makeRequest simFinApiKey path query
   res <- liftIO $ httpLbs req simFinManager
-  pure $ eitherDecode $ responseBody res
--}
+  case eitherDecode $ responseBody res of
+    Left s -> do
+      liftIO $ putStrLn s
+      liftIO $ putStrLn $ show res
+      undefined
+    Right a -> pure a
 
 createKeyedRows :: Value -> Parser [Value]
 createKeyedRows = withObject "Root" $ \root -> do
@@ -173,6 +182,24 @@ mapIndustry f g h industry = case industry of
   General a -> General $ f a
   Bank a -> Bank $ g a
   Insurance a -> Insurance $ h a
+
+data StockRef = SimFinId Int | Ticker Text
+  deriving Show
+
+separateStockRefs :: Foldable t => t StockRef -> ([Int], [Text])
+separateStockRefs = foldl' f ([], [])
+  where
+    f :: ([Int], [Text]) -> StockRef -> ([Int], [Text])
+    f acc (SimFinId n) = first (n:) acc
+    f acc (Ticker t) = second (t:) acc
+
+toStockRefQueryParams :: NonEmpty StockRef -> [(ByteString, Maybe ByteString)]
+toStockRefQueryParams refs =
+  let
+    (ids, tickers) = separateStockRefs refs
+    tickerParam = toTextCommaQueryParam "ticker" tickers
+    idParam = toShownCommaQueryParam "id" ids
+  in tickerParam <> idParam
 
 ------
 -- List companies
@@ -230,25 +257,14 @@ instance FromJSON CompanyInformation where
 instance FromJSON CompanyInfoKeyed where
   parseJSON o = CompanyInfoKeyed <$> (parseJSON =<< createKeyedRow o)
 
-fetchCompanyInformationById :: (MonadThrow m, MonadIO m) => SimFinContext -> [Int] -> m [CompanyInformation]
-fetchCompanyInformationById ctx ids =
+fetchCompanyInformation
+  :: (MonadThrow m, MonadIO m)
+  => SimFinContext
+  -> NonEmpty StockRef
+  -> m [CompanyInformation]
+fetchCompanyInformation ctx refs =
   fmap unKeyCompanyInfo <$> performRequest ctx "companies/general"
-    [ ("id", Just $ BS8.intercalate "," $ BS8.pack . show <$> ids) ]
-
-fetchCompanyInformationByTicker :: (MonadThrow m, MonadIO m) => SimFinContext -> [Text] -> m [CompanyInformation]
-fetchCompanyInformationByTicker ctx tickers =
-  fmap unKeyCompanyInfo <$> performRequest ctx "companies/general"
-    [ ("ticker", Just $ T.encodeUtf8 $ T.intercalate "," tickers) ]
-
-data StockRef = SimFinId Int | Ticker Text
-  deriving Show
-
-separateStockRefs :: Foldable t => t StockRef -> ([Int], [Text])
-separateStockRefs = foldl' f ([], [])
-  where
-    f :: ([Int], [Text]) -> StockRef -> ([Int], [Text])
-    f acc (SimFinId n) = first (n:) acc
-    f acc (Ticker t) = second (t:) acc
+    (toStockRefQueryParams refs)
 
 data StatementQuery
   = StatementQuery
@@ -262,23 +278,37 @@ data StatementQuery
   , shares :: Bool
   } deriving Show
 
+toCommaQueryParam :: ByteString -> (a -> ByteString) -> [a] -> [(ByteString, Maybe ByteString)]
+toCommaQueryParam key f as = case as of
+  [] -> []
+  _ -> [(key, Just $ BS8.intercalate "," $ f <$> as)]
+
+-- Chars are truncated to 8-bits
+toShownCommaQueryParam :: Show a => ByteString -> [a] -> [(ByteString, Maybe ByteString)]
+toShownCommaQueryParam key = toCommaQueryParam key (BS8.pack . show)
+
+toTextCommaQueryParam :: ByteString -> [Text] -> [(ByteString, Maybe ByteString)]
+toTextCommaQueryParam key = toCommaQueryParam key T.encodeUtf8
+
+toBoolQueryParam :: ByteString -> Bool -> [(ByteString, Maybe ByteString)]
+toBoolQueryParam key b = case b of
+  False -> []
+  True -> [(key, Nothing)]
+
 statementQueryToQueryParams :: StatementQuery -> [(ByteString, Maybe ByteString)]
 statementQueryToQueryParams StatementQuery{..} =
   let
-    (ids, tickers) = separateStockRefs stockRefs
-    idParam = if ids == [] then [] else [("id", Just $ BS8.intercalate "," $ BS8.pack . show <$> ids)]
-    tickerParam = if tickers == [] then [] else [("id", Just $ BS8.intercalate "," $ T.encodeUtf8 <$> tickers)]
-    startParam = maybe [] (\a -> [("start", Just $ BS8.pack $ show a)]) start
-    endParam = maybe [] (\a -> [("start", Just $ BS8.pack $ show a)]) end
-    periodParam = if periods == [] then [] else [("period", Just $ BS8.intercalate "," $ fiscalPeriodParam <$> periods)]
-    yearParam = if years == [] then [] else [("fyear", Just $ BS8.intercalate "," $ BS8.pack . show <$> years)]
-    ttmParam = if ttm then [("ttm", Nothing)] else []
-    asReportedParam = if asReported then [("asreported", Nothing)] else []
-    sharesParam = if shares then [("shares", Nothing)] else []
+    refParams = toStockRefQueryParams stockRefs
+    startParam = toShownCommaQueryParam "start "$ maybeToList start
+    endParam = toShownCommaQueryParam "end" $ maybeToList end
+    periodParam = toCommaQueryParam "period" fiscalPeriodParam periods
+    yearParam = toShownCommaQueryParam "fyear" years
+    ttmParam = toBoolQueryParam "ttm" ttm
+    asReportedParam = toBoolQueryParam "asreported" asReported
+    sharesParam = toBoolQueryParam "shares" shares
   in
   mconcat
-    [ tickerParam
-    , idParam
+    [ refParams
     , startParam
     , endParam
     , periodParam
@@ -806,14 +836,14 @@ unKeyIndustryBalanceSheets = mapIndustry
   unKeyBankBalanceSheets
   unKeyInsuranceBalanceSheets
 
-fetchBalanceSheetsByTicker :: (MonadThrow m, MonadIO m) => SimFinContext -> [Text] -> FiscalPeriod -> Int -> m [IndustryBalanceSheets]
-fetchBalanceSheetsByTicker ctx tickers period year =
+fetchBalanceSheets
+  :: (MonadThrow m, MonadIO m)
+  => SimFinContext
+  -> StatementQuery
+  -> m [IndustryBalanceSheets]
+fetchBalanceSheets ctx query =
   fmap unKeyIndustryBalanceSheets <$> performRequest ctx "companies/statements"
-    [ ("ticker", Just $ T.encodeUtf8 $ T.intercalate "," tickers)
-    , ("statement", Just "bs")
-    , ("period", Just $ fiscalPeriodParam period)
-    , ("fyear", Just $ BS8.pack $ show year)
-    ]
+    (("statement", Just "bs") : statementQueryToQueryParams query)
 
 ------
 -- P&L
@@ -1249,14 +1279,14 @@ unKeyIndustryProfitsAndLosses = mapIndustry
   unKeyBankProfitsAndLosses
   unKeyInsuranceProfitsAndLosses
 
-fetchProfitsAndLossesByTicker :: (MonadThrow m, MonadIO m) => SimFinContext -> [Text] -> FiscalPeriod -> Int -> m [IndustryProfitsAndLosses]
-fetchProfitsAndLossesByTicker ctx tickers period year =
+fetchProfitsAndLosses
+  :: (MonadThrow m, MonadIO m)
+  => SimFinContext
+  -> StatementQuery
+  -> m [IndustryProfitsAndLosses]
+fetchProfitsAndLosses ctx query =
   fmap unKeyIndustryProfitsAndLosses <$> performRequest ctx "companies/statements"
-    [ ("ticker", Just $ T.encodeUtf8 $ T.intercalate "," tickers)
-    , ("statement", Just "pl")
-    , ("period", Just $ fiscalPeriodParam period)
-    , ("fyear", Just $ BS8.pack $ show year)
-    ]
+    (("statement", Just "pl") : statementQueryToQueryParams query)
 
 -----
 -- Cash Flows
@@ -1685,14 +1715,14 @@ unKeyIndustryCashFlows = mapIndustry
   unKeyBankCashFlows
   unKeyInsuranceCashFlows
 
-fetchCashFlowsByTicker :: (MonadThrow m, MonadIO m) => SimFinContext -> [Text] -> FiscalPeriod -> Int -> m [IndustryCashFlows]
-fetchCashFlowsByTicker ctx tickers period year =
+fetchCashFlows
+  :: (MonadThrow m, MonadIO m)
+  => SimFinContext
+  -> StatementQuery
+  -> m [IndustryCashFlows]
+fetchCashFlows ctx query =
   fmap unKeyIndustryCashFlows <$> performRequest ctx "companies/statements"
-    [ ("ticker", Just $ T.encodeUtf8 $ T.intercalate "," tickers)
-    , ("statement", Just "cf")
-    , ("period", Just $ fiscalPeriodParam period)
-    , ("fyear", Just $ BS8.pack $ show year)
-    ]
+    (("statement", Just "cf") : statementQueryToQueryParams query)
 
 ------
 -- Derived
@@ -1786,33 +1816,179 @@ newtype DerivedKeyed a = DerivedKeyed { unKeyDerived :: [DerivedRow a] }
 instance (Read a, RealFrac a) => FromJSON (DerivedKeyed a) where
   parseJSON o = DerivedKeyed <$> (traverse parseJSON =<< createKeyedRows o)
 
-fetchDerivedByTicker
+fetchDerived
   :: (Read a, RealFrac a, MonadThrow m, MonadIO m)
   => SimFinContext
-  -> [Text]
-  -> FiscalPeriod
-  -> Int
-  -> m [[DerivedRow a]]
-fetchDerivedByTicker ctx tickers period year =
-  fmap unKeyDerived <$> performRequest ctx "companies/statements"
-    [ ("ticker", Just $ T.encodeUtf8 $ T.intercalate "," tickers)
-    , ("statement", Just "derived")
-    , ("period", Just $ fiscalPeriodParam period)
-    , ("fyear", Just $ BS8.pack $ show year)
+  -> StatementQuery
+  -> m [DerivedRow a]
+fetchDerived ctx query =
+  mconcat . fmap unKeyDerived <$> performRequest ctx "companies/statements"
+    (("statement", Just "derived") : statementQueryToQueryParams query)
+
+------
+-- Prices
+------
+
+data PricesRow a
+  = PricesRow
+  { simFinId :: Int
+  , ticker :: Text
+  , date :: Maybe Day
+  , open :: StringFrac a
+  , high :: StringFrac a
+  , low :: StringFrac a
+  , close :: StringFrac a
+  , adjClose :: StringFrac a
+  , volume :: Integer
+  , dividend :: Maybe (StringFrac a)
+  , commonSharesOutstanding :: Maybe Integer
+  } deriving Show
+
+instance (Read a, RealFrac a) => FromJSON (PricesRow a) where
+  parseJSON = withObject "PricesRow" $ \v -> PricesRow
+    <$> v .: "SimFinId"
+    <*> v .: "Ticker"
+    <*> v .: "Date"
+    <*> v .: "Open"
+    <*> v .: "High"
+    <*> v .: "Low"
+    <*> v .: "Close"
+    <*> v .: "Adj. Close"
+    <*> v .: "Volume"
+    <*> v .: "Dividend"
+    <*> v .: "Common Shares Outstanding"
+
+data PricesQuery
+  = PricesQuery
+  { stockRefs :: NonEmpty StockRef
+  , start :: Maybe Day
+  , end :: Maybe Day
+  , asReported :: Bool
+  } deriving Show
+
+priceQueryToQueryParams :: PricesQuery -> [(ByteString, Maybe ByteString)]
+priceQueryToQueryParams PricesQuery{..} = 
+  let
+    refParams = toStockRefQueryParams stockRefs
+    startParam = toShownCommaQueryParam "start "$ maybeToList start
+    endParam = toShownCommaQueryParam "end" $ maybeToList end
+    asReportedParam = toBoolQueryParam "asreported" asReported
+  in
+  mconcat
+    [ refParams
+    , startParam
+    , endParam
+    , asReportedParam
     ]
+
+newtype PricesKeyed a = PricesKeyed { unKeyPrices :: [PricesRow a] }
+
+instance (Read a, RealFrac a) => FromJSON (PricesKeyed a) where
+  parseJSON o = PricesKeyed <$> (traverse parseJSON =<< createKeyedRows o)
+
+fetchPrices
+  :: (Read a, RealFrac a, MonadThrow m, MonadIO m)
+  => SimFinContext
+  -> PricesQuery
+  -> m [PricesRow a]
+fetchPrices ctx query =
+  mconcat . fmap unKeyPrices <$> performRequest ctx "companies/prices"
+    (priceQueryToQueryParams query)
+
+data RatiosRow a
+  = RatiosRow
+  { marketCap :: Integer
+  , priceToEarningsRatioQuarterly :: Maybe (StringFrac a)
+  , priceToEarningsRatioTTM :: Maybe (StringFrac a)
+  , priceToSalesRatioQuarterly :: Maybe (StringFrac a)
+  , priceToSalesRatioTTM :: Maybe (StringFrac a)
+  , priceToBookValueTTM :: Maybe (StringFrac a)
+  , priceToFreeCashFlowQuarterly :: Maybe (StringFrac a)
+  , priceToFreeCashFlowTTM :: Maybe (StringFrac a)
+  , enterpriseValueTTM :: Maybe (StringFrac a)
+  , eVEBITDATTM :: Maybe (StringFrac a)
+  , eVSalesTTM :: Maybe (StringFrac a)
+  , eVFCFTTM :: Maybe (StringFrac a)
+  , bookToMarketValueTTM :: Maybe (StringFrac a)
+  , operatingIncomeEVTTM :: Maybe (StringFrac a)
+  } deriving Show
+
+instance (Read a, RealFrac a) => FromJSON (RatiosRow a) where
+  parseJSON = withObject "RatiosRow" $ \v -> RatiosRow
+    <$> v .: "Market-Cap"
+    <*> v .: "Price to Earnings Ratio (quarterly)"
+    <*> v .: "Price to Earnings Ratio (ttm)"
+    <*> v .: "Price to Sales Ratio (quarterly)"
+    <*> v .: "Price to Sales Ratio (ttm)"
+    <*> v .: "Price to Book Value (ttm)"
+    <*> v .: "Price to Free Cash Flow (quarterly)"
+    <*> v .: "Price to Free Cash Flow (ttm)"
+    <*> v .: "Enterprise Value (ttm)"
+    <*> v .: "EV/EBITDA (ttm)"
+    <*> v .: "EV/Sales (ttm)"
+    <*> v .: "EV/FCF (ttm)"
+    <*> v .: "Book to Market Value (ttm)"
+    <*> v .: "Operating Income/EV (ttm)"
+
+data PricesAndRatiosRow a
+  = PricesAndRatiosRow
+  { prices :: PricesRow a
+  , ratios :: RatiosRow a
+  } deriving Show
+
+instance (Read a, RealFrac a) => FromJSON (PricesAndRatiosRow a) where
+  parseJSON v = PricesAndRatiosRow
+    <$> parseJSON v
+    <*> parseJSON v
+
+newtype PricesAndRatiosKeyed a = PricesAndRatiosKeyed { unKeyPricesAndRatios :: [PricesAndRatiosRow a] }
+
+instance (Read a, RealFrac a) => FromJSON (PricesAndRatiosKeyed a) where
+  parseJSON o = PricesAndRatiosKeyed <$> (traverse parseJSON =<< createKeyedRows o)
+
+fetchPricesAndRatios
+  :: (Read a, RealFrac a, MonadThrow m, MonadIO m)
+  => SimFinContext
+  -> PricesQuery
+  -> m [PricesAndRatiosRow a]
+fetchPricesAndRatios ctx query =
+  mconcat . fmap unKeyPricesAndRatios <$> performRequest ctx "companies/prices"
+    (("ratios", Nothing) : priceQueryToQueryParams query)
+
+testStatementQuery :: Text -> StatementQuery
+testStatementQuery ref = StatementQuery
+  { stockRefs = NE.singleton $ Ticker ref
+  , periods = [FullYear]
+  , years = [2020]
+  , start = Nothing
+  , end = Nothing
+  , ttm = False
+  , asReported = False
+  , shares = False
+  }
+
+testPricesQuery :: Text -> PricesQuery
+testPricesQuery ref = PricesQuery
+  { stockRefs = NE.singleton $ Ticker ref
+  , start = Nothing
+  , end = Nothing
+  , asReported = False
+  }
 
 test :: IO ()
 test = do
   ctx <- createDefaultContext
-  -- print =<< fetchBalanceSheetsByTicker ctx ["CB"] Q1 2022
-  -- print =<< fetchBalanceSheetsByTicker ctx ["C"] Q1 2022
-  -- print =<< fetchBalanceSheetsByTicker ctx ["AAPL"] Q1 2022
-  -- print =<< fetchProfitsAndLossesByTicker ctx ["GOOG"] FullYear 2020
-  -- print =<< fetchProfitsAndLossesByTicker ctx ["C"] FullYear 2020
-  -- print =<< fetchProfitsAndLossesByTicker ctx ["CB"] FullYear 2020
-  -- print =<< fetchCashFlowsByTicker ctx ["GOOG"] FullYear 2020
-  -- print =<< fetchCashFlowsByTicker ctx ["C"] FullYear 2020
-  -- print =<< fetchCashFlowsByTicker ctx ["CB"] FullYear 2020
-  -- print =<< fetchDerivedByTicker ctx ["AAPL"] FullYear 2020
+  -- print =<< fetchBalanceSheets ctx (testStatementQuery"AAPL")
+  -- print =<< fetchBalanceSheets ctx (testStatementQuery "CB")
+  -- print =<< fetchBalanceSheets ctx (testStatementQuery "C")
+  -- print =<< fetchProfitsAndLosses ctx (testStatementQuery "GOOG")
+  -- print =<< fetchProfitsAndLosses ctx (testStatementQuery "C")
+  -- print =<< fetchProfitsAndLosses ctx (testStatementQuery "CB")
+  -- print =<< fetchCashFlows ctx (testStatementQuery "GOOG")
+  -- print =<< fetchCashFlows ctx (testStatementQuery "C")
+  -- print =<< fetchCashFlows ctx (testStatementQuery "CB")
+  -- print =<< fetchDerived ctx (testStatementQuery "AAPL")
+  -- print =<< fetchPrices ctx (testPricesQuery "AAPL")
+  print =<< fetchPricesAndRatios ctx (testPricesQuery "AAPL")
   pure ()
 
