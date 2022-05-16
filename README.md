@@ -2,6 +2,8 @@
 
 Pre-alpha, expect frequent breaking changes.
 
+No SimFin+ features have been tested at all yet.
+
 ## TODO:
 
 * Handle upgrade prompt answers
@@ -14,3 +16,7 @@ Pre-alpha, expect frequent breaking changes.
 * Add examples (with charts?)
 * Add documentation
 * Publish to Hackage
+
+## Might Do
+
+* Specialize Standard / SimFin+ data structures and results
