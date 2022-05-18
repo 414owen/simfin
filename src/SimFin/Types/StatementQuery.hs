@@ -4,6 +4,7 @@
 
 module SimFin.Types.StatementQuery
   ( StatementQuery(..)
+  , StatementQueryFree(..)
   , statementQueryToQueryParams
   , statementQueryFreeToQueryParams
   ) where

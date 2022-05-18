@@ -19,21 +19,17 @@ main = do
   ctx <- createDefaultContext
   defaultMain (tests ctx)
 
-testStatementQuery :: Text -> StatementQuery
-testStatementQuery ref = StatementQuery
-  { stockRefs = pure $ Ticker ref
-  , periods = [FullYear]
-  , years = [2020]
-  , start = Nothing
-  , end = Nothing
+testStatementQuery :: Text -> StatementQueryFree
+testStatementQuery ref = StatementQueryFree
+  { stockRef = Ticker ref
+  , period = FullYear
+  , year = 2020
   , ttm = False
-  , asReported = False
-  , shares = False
   }
 
-testPricesQuery :: Text -> PricesQuery
-testPricesQuery ref = PricesQuery
-  { stockRefs = pure $ Ticker ref
+testPricesQuery :: Text -> PricesQueryFree
+testPricesQuery ref = PricesQueryFree
+  { stockRef = Ticker ref
   , start = Nothing
   , end = Nothing
   , asReported = False
@@ -119,7 +115,7 @@ tests ctx = testGroup "SimFin"
     ]
   ]
   where
-    testStmt :: (SimFinContext -> StatementQuery -> IO a) -> Text -> IO a
+    testStmt :: (SimFinContext -> StatementQueryFree -> IO a) -> Text -> IO a
     testStmt f ticker = f ctx $ testStatementQuery ticker
 
     testBalanceSheet :: Text -> UnitIndustry -> Assertion

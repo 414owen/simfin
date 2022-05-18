@@ -23,8 +23,8 @@ module SimFin.Free
   , DerivedRow(..)
   , PricesRow(..)
 
-  , PricesQuery(..)
-  , StatementQuery(..)
+  , PricesQueryFree(..)
+  , StatementQueryFree(..)
 
   , StockRef(..)
   , FiscalPeriod(..)
@@ -86,11 +86,11 @@ fetchCompanyInfo ctx refs = do
 fetchBalanceSheet
   :: (MonadThrow m, MonadIO m)
   => SimFinContext
-  -> StatementQuery
+  -> StatementQueryFree
   -> m (ApiResult (Maybe IndustryBalanceSheet))
 fetchBalanceSheet ctx query = do
   nested :: ApiResult [IndustryBalanceSheets] <- performRequest ctx "companies/statements"
-    $ ("statement", Just "bs") : statementQueryToQueryParams query
+    $ ("statement", Just "bs") : statementQueryFreeToQueryParams query
   pure $ listToMaybe . invertIndustries <$> nested
 
 ------
@@ -100,11 +100,11 @@ fetchBalanceSheet ctx query = do
 fetchProfitAndLoss
   :: (MonadThrow m, MonadIO m)
   => SimFinContext
-  -> StatementQuery
+  -> StatementQueryFree
   -> m (ApiResult (Maybe IndustryProfitAndLoss))
 fetchProfitAndLoss ctx query = do
   nested :: ApiResult [IndustryProfitsAndLosses] <- performRequest ctx "companies/statements"
-    $ ("statement", Just "pl") : statementQueryToQueryParams query
+    $ ("statement", Just "pl") : statementQueryFreeToQueryParams query
   pure $ listToMaybe . invertIndustries <$> nested
 
 -----
@@ -114,11 +114,11 @@ fetchProfitAndLoss ctx query = do
 fetchCashFlow
   :: (MonadThrow m, MonadIO m)
   => SimFinContext
-  -> StatementQuery
+  -> StatementQueryFree
   -> m (ApiResult (Maybe IndustryCashFlow))
 fetchCashFlow ctx query = do
   nested :: ApiResult [IndustryCashFlows] <- performRequest ctx "companies/statements"
-    $ ("statement", Just "cf") : statementQueryToQueryParams query
+    $ ("statement", Just "cf") : statementQueryFreeToQueryParams query
   pure $ listToMaybe . invertIndustries <$> nested
 
 ------
@@ -128,11 +128,11 @@ fetchCashFlow ctx query = do
 fetchDerived
   :: forall m a. (Read a, RealFrac a, MonadThrow m, MonadIO m)
   => SimFinContext
-  -> StatementQuery
+  -> StatementQueryFree
   -> m (ApiResult (Maybe (DerivedRow a)))
 fetchDerived ctx query = do
   nested :: ApiResult [DerivedRowsKeyed a] <- performRequest ctx "companies/statements"
-    (("statement", Just "derived") : statementQueryToQueryParams query)
+    (("statement", Just "derived") : statementQueryFreeToQueryParams query)
   pure $ listToMaybe . mconcat . fmap unDerivedRows <$> nested
 
 ------
@@ -142,8 +142,8 @@ fetchDerived ctx query = do
 fetchPrices
   :: (Read a, RealFrac a, MonadThrow m, MonadIO m)
   => SimFinContext
-  -> PricesQuery
+  -> PricesQueryFree
   -> m (ApiResult [PricesRow a])
 fetchPrices ctx query =
   mconcat . fmap unKeyPrices <$$> performRequest ctx "companies/prices"
-    (pricesQueryToQueryParams query)
+    (pricesQueryFreeToQueryParams query)

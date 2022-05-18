@@ -4,10 +4,11 @@
 
 module SimFin.Types.PricesQuery
   ( PricesQuery(..)
+  , PricesQueryFree(..)
   , pricesQueryToQueryParams
+  , pricesQueryFreeToQueryParams
   ) where
 
-import Data.ByteString (ByteString)
 import Data.List.NonEmpty (NonEmpty)
 import Data.Maybe (maybeToList)
 import Data.Time.Calendar (Day)
@@ -23,7 +24,15 @@ data PricesQuery
   , asReported :: Bool
   } deriving Show
 
-pricesQueryToQueryParams :: PricesQuery -> [(ByteString, Maybe ByteString)]
+data PricesQueryFree
+  = PricesQueryFree
+  { stockRef :: StockRef
+  , start :: Maybe Day
+  , end :: Maybe Day
+  , asReported :: Bool
+  } deriving Show
+
+pricesQueryToQueryParams :: PricesQuery -> [QueryParam]
 pricesQueryToQueryParams PricesQuery{..} = 
   let
     refParams = stockRefsToQueryParams stockRefs
@@ -38,3 +47,14 @@ pricesQueryToQueryParams PricesQuery{..} =
     , asReportedParam
     ]
 
+freeToPlus :: PricesQueryFree -> PricesQuery
+freeToPlus PricesQueryFree{..}
+  = PricesQuery
+  { stockRefs = pure stockRef
+  , start = start
+  , end = end
+  , asReported = asReported
+  }
+
+pricesQueryFreeToQueryParams :: PricesQueryFree -> [QueryParam]
+pricesQueryFreeToQueryParams = pricesQueryToQueryParams . freeToPlus
