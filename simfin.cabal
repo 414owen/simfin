@@ -10,7 +10,7 @@ maintainer:         owen@owen.cafe
 category:           Web
 
 library
-    exposed-modules:  SimFin
+    exposed-modules:  SimFin.Plus
                     , SimFin.Types.BalanceSheet
                     , SimFin.Types.CashFlow
                     , SimFin.Types.CompanyInfo

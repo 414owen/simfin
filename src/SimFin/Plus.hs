@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module SimFin
+module SimFin.Plus
   ( SimFinContext(..)
   , Industry(..)
 
