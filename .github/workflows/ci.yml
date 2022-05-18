@@ -24,7 +24,7 @@ jobs:
         path: |
           ${{ steps.setup-haskell-build-env.outputs.cabal-store }}
           dist-newstyle
-        key: ${{ runner.os }}-cabal-${{ matrix.ghc }}-${{ hashFiles('cabal.project.freeze') }}
+        key: ${{ runner.os }}-cabal-${{ matrix.ghc }}-${{ hashFiles('simfin.cabal') }}
         restore-keys: |
           ${{ runner.os }}-cabal-${{ matrix.ghc }}
 
