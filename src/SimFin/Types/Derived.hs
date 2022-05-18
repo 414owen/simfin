@@ -7,7 +7,6 @@ module SimFin.Types.Derived
   ) where
 
 import Data.Aeson
-import Data.Aeson.Types (Parser)
 import Data.Text (Text)
 import Data.Time.Calendar (Day)
 

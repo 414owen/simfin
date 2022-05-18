@@ -12,9 +12,12 @@ category:           Web
 library
     exposed-modules:  SimFin
                     , SimFin.Types.BalanceSheet
+                    , SimFin.Types.CompanyInfo
                     , SimFin.Types.ProfitAndLoss
                     , SimFin.Types.CashFlow
                     , SimFin.Types.Industry
+                    , SimFin.Types.Prices
+                    , SimFin.Types.Ratios
                     , SimFin.Types.StringFrac
                     , SimFin.Util
     build-depends:    base >=4.14.3.0

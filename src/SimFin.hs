@@ -31,7 +31,7 @@ module SimFin
   , createDefaultContext
   , fetchCompanyList
 
-  , fetchCompanyInformation
+  , fetchCompanyInfo
   , fetchBalanceSheets
   , fetchProfitsAndLosses
   , fetchCashFlows
@@ -40,12 +40,10 @@ module SimFin
   , fetchPricesAndRatios
   ) where
 
-import Control.Applicative ((<|>))
 import Control.Arrow
 import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Data.Aeson
-import Data.Aeson.Types (typeMismatch)
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.UTF8 as BSU
@@ -63,11 +61,13 @@ import Network.HTTP.Client.TLS
 import System.Environment (lookupEnv)
 
 import SimFin.Types.BalanceSheet
+import SimFin.Types.CompanyInfo
 import SimFin.Types.CashFlow
 import SimFin.Types.Derived
 import SimFin.Types.Industry
+import SimFin.Types.Prices
 import SimFin.Types.ProfitAndLoss
-import SimFin.Types.StringFrac
+import SimFin.Types.Ratios
 import SimFin.Util
 
 type QueryParam = (ByteString, Maybe ByteString)
@@ -213,40 +213,13 @@ fetchCompanyList ctx =
 -- General Company Info
 ------
 
-data CompanyInformation
-  = CompanyInformation
-  { simFinId :: Int
-  , ticker :: Text
-  , companyName :: Text
-  , industryId :: Int
-  , monthFYEnd :: Int
-  , numberEmployees :: Int
-  , businessSummary :: Text
-  } deriving Show
-
-newtype CompanyInfoKeyed = CompanyInfoKeyed { unKeyCompanyInfo :: CompanyInformation }
-
-instance FromJSON CompanyInformation where
-  parseJSON = withObject "CompanyInformation" $ \v -> CompanyInformation
-    <$> v .: "SimFinId"
-    <*> v .: "Ticker"
-    <*> v .: "Company Name"
-    <*> v .: "IndustryId"
-    <*> v .: "Month FY End"
-    <*> v .: "Number Employees"
-    <*> v .: "Business Summary"
-
-instance FromJSON CompanyInfoKeyed where
-  parseJSON o = CompanyInfoKeyed <$> (parseJSON =<< createKeyedRow o)
-
-fetchCompanyInformation
+fetchCompanyInfo
   :: (MonadThrow m, MonadIO m)
   => SimFinContext
   -> NonEmpty StockRef
-  -> m [CompanyInformation]
-fetchCompanyInformation ctx refs =
-  fmap unKeyCompanyInfo <$> performRequest ctx "companies/general"
-    (toStockRefQueryParams refs)
+  -> m [CompanyInfoRow]
+fetchCompanyInfo ctx refs =
+  performRequest ctx "companies/general" (toStockRefQueryParams refs)
 
 -- For SimFin+ users
 data StatementQuery
@@ -381,35 +354,6 @@ fetchDerived ctx query =
 -- Prices
 ------
 
-data PricesRow a
-  = PricesRow
-  { simFinId :: Int
-  , ticker :: Text
-  , date :: Maybe Day
-  , open :: StringFrac a
-  , high :: StringFrac a
-  , low :: StringFrac a
-  , close :: StringFrac a
-  , adjClose :: StringFrac a
-  , volume :: Integer
-  , dividend :: Maybe (StringFrac a)
-  , commonSharesOutstanding :: Maybe Integer
-  } deriving Show
-
-instance (Read a, RealFrac a) => FromJSON (PricesRow a) where
-  parseJSON = withObject "PricesRow" $ \v -> PricesRow
-    <$> v .: "SimFinId"
-    <*> v .: "Ticker"
-    <*> v .: "Date"
-    <*> v .: "Open"
-    <*> v .: "High"
-    <*> v .: "Low"
-    <*> v .: "Close"
-    <*> v .: "Adj. Close"
-    <*> v .: "Volume"
-    <*> v .: "Dividend"
-    <*> v .: "Common Shares Outstanding"
-
 data PricesQuery
   = PricesQuery
   { stockRefs :: NonEmpty StockRef
@@ -446,41 +390,6 @@ fetchPrices
 fetchPrices ctx query =
   mconcat . fmap unKeyPrices <$> performRequest ctx "companies/prices"
     (priceQueryToQueryParams query)
-
-data RatiosRow a
-  = RatiosRow
-  { marketCap :: Integer
-  , priceToEarningsRatioQuarterly :: Maybe (StringFrac a)
-  , priceToEarningsRatioTTM :: Maybe (StringFrac a)
-  , priceToSalesRatioQuarterly :: Maybe (StringFrac a)
-  , priceToSalesRatioTTM :: Maybe (StringFrac a)
-  , priceToBookValueTTM :: Maybe (StringFrac a)
-  , priceToFreeCashFlowQuarterly :: Maybe (StringFrac a)
-  , priceToFreeCashFlowTTM :: Maybe (StringFrac a)
-  , enterpriseValueTTM :: Maybe (StringFrac a)
-  , eVEBITDATTM :: Maybe (StringFrac a)
-  , eVSalesTTM :: Maybe (StringFrac a)
-  , eVFCFTTM :: Maybe (StringFrac a)
-  , bookToMarketValueTTM :: Maybe (StringFrac a)
-  , operatingIncomeEVTTM :: Maybe (StringFrac a)
-  } deriving Show
-
-instance (Read a, RealFrac a) => FromJSON (RatiosRow a) where
-  parseJSON = withObject "RatiosRow" $ \v -> RatiosRow
-    <$> v .: "Market-Cap"
-    <*> v .: "Price to Earnings Ratio (quarterly)"
-    <*> v .: "Price to Earnings Ratio (ttm)"
-    <*> v .: "Price to Sales Ratio (quarterly)"
-    <*> v .: "Price to Sales Ratio (ttm)"
-    <*> v .: "Price to Book Value (ttm)"
-    <*> v .: "Price to Free Cash Flow (quarterly)"
-    <*> v .: "Price to Free Cash Flow (ttm)"
-    <*> v .: "Enterprise Value (ttm)"
-    <*> v .: "EV/EBITDA (ttm)"
-    <*> v .: "EV/Sales (ttm)"
-    <*> v .: "EV/FCF (ttm)"
-    <*> v .: "Book to Market Value (ttm)"
-    <*> v .: "Operating Income/EV (ttm)"
 
 data PricesAndRatiosRow a
   = PricesAndRatiosRow
