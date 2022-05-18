@@ -10,12 +10,17 @@ import Control.Arrow (first, second)
 import Data.ByteString (ByteString)
 import Data.List (foldl')
 import Data.List.NonEmpty (NonEmpty)
+import Data.String
 import Data.Text (Text)
+import qualified Data.Text as T
 
 import SimFin.Util
 
 data StockRef = SimFinId Int | Ticker Text
   deriving Show
+
+instance IsString StockRef where
+  fromString = Ticker . T.pack
 
 separateStockRefs :: Foldable t => t StockRef -> ([Int], [Text])
 separateStockRefs = foldl' f ([], [])

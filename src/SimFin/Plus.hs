@@ -19,12 +19,11 @@ module SimFin.Plus
   , BankCashFlowRow(..)
   , InsuranceCashFlowRow(..)
 
+  , DerivedRow(..)
+
   , PricesRow(..)
   , RatiosRow(..)
   , PricesAndRatiosRow(..)
-
-  , DerivedRow(..)
-  , PricesRow(..)
 
   , StockRef(..)
   , FiscalPeriod(..)

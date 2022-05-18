@@ -32,8 +32,8 @@ data ApiError
   | Other Text
 
 instance Show ApiError where
-  show (DecodeError bs err) = "Couldn't decode reponse body. Err: " <> err
-  show (ParseError val err) = "Couldn't parse JSON value. Err: " <> err
+  show (DecodeError _ err) = "Couldn't decode reponse body. Err: " <> err
+  show (ParseError _ err) = "Couldn't parse JSON value. Err: " <> err
   show (Other err) = "Server returned error: " <> T.unpack err
 
 type ApiResult = Either ApiError

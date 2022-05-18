@@ -1,7 +1,10 @@
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE LambdaCase#-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Main where
+module Main
+  ( main
+  ) where
 
 import Control.Monad.IO.Class
 import Data.Aeson
@@ -10,6 +13,11 @@ import Test.Tasty
 import Test.Tasty.HUnit
 
 import SimFin.Free
+
+main :: IO ()
+main = do
+  ctx <- createDefaultContext
+  defaultMain (tests ctx)
 
 testStatementQuery :: Text -> StatementQuery
 testStatementQuery ref = StatementQuery
@@ -49,43 +57,65 @@ industryMatches a b = case (a, b) of
   (Insurance _, Insurance _) -> True
   _ -> False
 
+testFetchMaybe :: IO (ApiResult (Maybe a)) -> IO ()
+testFetchMaybe f = do
+  res <- f
+  flip withRight res $ withMaybe $ const $ pure ()
+
 testFetchIndustry :: UnitIndustry -> IO (ApiResult (Maybe (Industry a b c))) -> IO ()
 testFetchIndustry ind f = do
   res <- f
-  case res of
-    Right (Just a) -> assertBool "Industry matches" $ industryMatches ind a
-    Left a -> assertFailure $ "Retrieved Left: " <> show a
-    Right (Nothing) -> assertFailure "Retrieved Nothing successfully"
+  flip withRight res $ withMaybe $ assertBool "Industry Matches" . industryMatches ind
 
-testFetch :: IO (ApiResult (Maybe a)) -> IO ()
-testFetch f = do
+failWithEmpty :: IO ()
+failWithEmpty = assertFailure "Retrieved Nothing successfully"
+
+testFetchList :: IO (ApiResult [a]) -> IO ()
+testFetchList f = do
   res <- f
-  case res of
-    Right (Just a) -> pure ()
-    Left a -> assertFailure $ "Retrieved Left: " <> show a
-    Right (Nothing) -> assertFailure "Retrieved Nothing successfully"
+  withRight ensureNE res
+
+withRight :: Show c => (a -> IO b) -> Either c a -> IO b
+withRight _ (Left a) = assertFailure $ "Retrieved Left: " <> show a
+withRight f (Right a) = f a
+
+withMaybe :: (a -> IO ()) -> Maybe a -> IO ()
+withMaybe _ Nothing = failWithEmpty
+withMaybe f (Just a) = f a
+
+ensureNE :: [a] -> IO ()
+ensureNE [] = failWithEmpty
+ensureNE _ = pure ()
 
 tests :: SimFinContext -> TestTree
 tests ctx = testGroup "SimFin"
-  [ testGroup "BalanceSheet"
+  [ testCase "List companies" $ testFetchList $ fetchCompanyList ctx
+  , testCase "Company Info" $ testFetchMaybe $ fetchCompanyInfo ctx $ pure "AAPL"
+  , testGroup "Balance Sheet"
     [ testCase "General" $ testBalanceSheet "AAPL" general
     , testCase "Bank" $ testBalanceSheet "C" bank
     , testCase "Insurance" $ testBalanceSheet "CB" insurance
     ]
-  , testGroup "ProfitAndLoss"
+  , testGroup "Profit & Loss"
     [ testCase "General" $ testProfitAndLoss "AAPL" general
     , testCase "Bank" $ testProfitAndLoss "C" bank
     , testCase "Insurance" $ testProfitAndLoss "CB" insurance
     ]
-  , testGroup "CashFlow"
+  , testGroup "Cash Flow"
     [ testCase "General" $ testCashFlow "AAPL" general
     , testCase "Bank" $ testCashFlow "C" bank
     , testCase "Insurance" $ testCashFlow "CB" insurance
     ]
+    -- This endpoint isn't different by industry types
   , testGroup "Derived"
     [ testCase "General" $ testDerived "AAPL"
     , testCase "Bank" $ testDerived "C"
     , testCase "Insurance" $ testDerived "CB"
+    ]
+  , testGroup "Price"
+    [ testCase "General" $ testFetchPrices "AAPL"
+    , testCase "Bank" $ testFetchPrices "C"
+    , testCase "Insurance" $ testFetchPrices "CB"
     ]
   ]
   where
@@ -102,12 +132,7 @@ tests ctx = testGroup "SimFin"
     testCashFlow ticker industry = testFetchIndustry industry $ testStmt fetchCashFlow ticker
 
     testDerived :: Text -> Assertion
-    testDerived ticker = testFetch $ testStmt fetchDerived ticker
-    -- print =<< fetchDerived ctx (testStatementQuery "AAPL")
-    -- print =<< fetchPrices ctx (testPricesQuery "AAPL")
-    -- print =<< fetchPricesAndRatios ctx (testPricesQuery "AAPL")
+    testDerived ticker = testFetchMaybe $ testStmt fetchDerived ticker
 
-main :: IO ()
-main = do
-  ctx <- createDefaultContext
-  defaultMain (tests ctx)
+    testFetchPrices :: Text -> IO ()
+    testFetchPrices ticker = testFetchList $ fetchPrices ctx $ testPricesQuery ticker
