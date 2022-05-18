@@ -12,14 +12,22 @@ category:           Web
 library
     exposed-modules:  SimFin
                     , SimFin.Types.BalanceSheet
-                    , SimFin.Types.CompanyInfo
-                    , SimFin.Types.ProfitAndLoss
                     , SimFin.Types.CashFlow
+                    , SimFin.Types.CompanyInfo
+                    , SimFin.Types.CompanyListing
+                    , SimFin.Types.Derived
+                    , SimFin.Types.FiscalPeriod
                     , SimFin.Types.Industry
                     , SimFin.Types.Prices
+                    , SimFin.Types.PricesAndRatios
+                    , SimFin.Types.PricesQuery
+                    , SimFin.Types.ProfitAndLoss
                     , SimFin.Types.Ratios
+                    , SimFin.Types.StatementQuery
+                    , SimFin.Types.StockRef
                     , SimFin.Types.StringFrac
                     , SimFin.Util
+    other-modules:    SimFin.Internal
     build-depends:    base >=4.14.3.0
                     , http-client-tls
                     , http-client

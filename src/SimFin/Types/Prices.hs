@@ -3,6 +3,7 @@
 
 module SimFin.Types.Prices
   ( PricesRow(..)
+  , PricesKeyed(..)
   ) where
 
 import Data.Aeson
@@ -10,6 +11,7 @@ import Data.Text (Text)
 import Data.Time.Calendar (Day)
 
 import SimFin.Types.StringFrac
+import SimFin.Util
 
 data PricesRow a
   = PricesRow
@@ -40,3 +42,7 @@ instance (Read a, RealFrac a) => FromJSON (PricesRow a) where
     <*> v .: "Dividend"
     <*> v .: "Common Shares Outstanding"
 
+newtype PricesKeyed a = PricesKeyed { unKeyPrices :: [PricesRow a] }
+
+instance (Read a, RealFrac a) => FromJSON (PricesKeyed a) where
+  parseJSON o = PricesKeyed <$> (traverse parseJSON =<< createKeyedRows o)
