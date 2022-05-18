@@ -8,20 +8,30 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Cache
-      uses: actions/cache@v3
-      env:
-        cache-name: cache-cabal
-      with:
-        path: ~/.cabal
-        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/*.cabal') }}-${{ hashFiles('**/cabal.project') }}
-        restore-keys: |
-          ${{ runner.os }}-build-${{ env.cache-name }}-
-          ${{ runner.os }}-build-
-          ${{ runner.os }}-
+    - name: Set all tracked file modification times to the time of their last commit
+      run: |
+        rev=HEAD
+        for f in $(git ls-tree -r -t --full-name --name-only "$rev") ; do
+            touch -d $(git log --pretty=format:%cI -1 "$rev" -- "$f") "$f";
+        done
 
     - name: Update cabal cache
       run: cabal update
 
+    - name: Freeze Cabal plan
+      run: cabal freeze
+
+    - name: Cache Cabal build artifacts
+      uses: actions/cache@v2
+      with:
+        path: |
+          ${{ steps.setup-haskell-build-env.outputs.cabal-store }}
+          dist-newstyle
+        key: ${{ runner.os }}-cabal-${{ matrix.ghc }}-${{ hashFiles('cabal.project.freeze') }}
+        restore-keys: |
+          ${{ runner.os }}-cabal-${{ matrix.ghc }}
+
     - name: Run tests
+      env:
+        SIM_FIN_API_KEY: ${{ secrets.SIM_FIN_API_KEY }}
       run: cabal v2-test
