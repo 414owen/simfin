@@ -7,6 +7,7 @@ module SimFin.Types.BalanceSheet
   , BankBalanceSheetRow(..)
   , InsuranceBalanceSheetRow(..)
   , IndustryBalanceSheets
+  , IndustryBalanceSheet
   ) where
 
 import Control.Applicative ((<|>))
@@ -538,10 +539,13 @@ type IndustryBalanceSheetsKeyed
 type IndustryBalanceSheets
   = Industry [GeneralBalanceSheetRow] [BankBalanceSheetRow] [InsuranceBalanceSheetRow]
 
+type IndustryBalanceSheet
+  = Industry GeneralBalanceSheetRow BankBalanceSheetRow InsuranceBalanceSheetRow
+
 instance FromJSON IndustryBalanceSheetsKeyed where
-  parseJSON json = General <$> parseJSON json
-    <|> Bank <$> parseJSON json
-    <|> Insurance <$> parseJSON json
+  parseJSON root = General <$> parseJSON root
+    <|> Bank <$> parseJSON root
+    <|> Insurance <$> parseJSON root
 
 unKeyIndustryBalanceSheets :: IndustryBalanceSheetsKeyed -> IndustryBalanceSheets
 unKeyIndustryBalanceSheets = mapIndustry
@@ -550,4 +554,4 @@ unKeyIndustryBalanceSheets = mapIndustry
   unKeyInsuranceBalanceSheets
 
 instance FromJSON IndustryBalanceSheets where
-  parseJSON json = unKeyIndustryBalanceSheets <$> parseJSON json
+  parseJSON root = unKeyIndustryBalanceSheets <$> parseJSON root

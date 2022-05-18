@@ -3,7 +3,7 @@
 
 module SimFin.Types.Derived
   ( DerivedRow(..)
-  , DerivedRows(..)
+  , DerivedRowsKeyed(..)
   ) where
 
 import Data.Aeson
@@ -11,13 +11,14 @@ import Data.Text (Text)
 import Data.Time.Calendar (Day)
 
 import SimFin.Types.StringFrac
+import SimFin.Types.FiscalPeriod
 import SimFin.Util
 
 data DerivedRow a
   = DerivedRow
   { simFinId :: Int
   , ticker :: Text
-  , fiscalPeriod :: String
+  , fiscalPeriod :: FiscalPeriod
   , fiscalYear :: Int
   , reportDate :: Day
   , publishDate :: Day
@@ -88,7 +89,7 @@ instance (Read a, RealFrac a) => FromJSON (DerivedRow a) where
     <*> v .: "Net Debt / EBITDA"
     <*> v .: "Net Debt / EBIT"
 
-newtype DerivedRows a = DerivedRows { unDerivedRows :: [DerivedRow a] }
+newtype DerivedRowsKeyed a = DerivedRowsKeyed { unDerivedRows :: [DerivedRow a] }
 
-instance (Read a, RealFrac a) => FromJSON (DerivedRows a) where
-  parseJSON o = fmap DerivedRows $ traverse parseJSON =<< createKeyedRows o
+instance (Read a, RealFrac a) => FromJSON (DerivedRowsKeyed a) where
+  parseJSON o = fmap DerivedRowsKeyed $ traverse parseJSON =<< createKeyedRows o

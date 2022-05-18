@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module SimFin.Internal
   ( SimFinContext(..)
@@ -7,16 +8,18 @@ module SimFin.Internal
   , createDefaultContext
   , baseRequest
   , makeRequest
-  , performRequest
+  , performGenericRequest
   ) where
 
 import Control.Monad.IO.Class
 import Data.Aeson
+import Data.Aeson.Types (parse)
 import Data.ByteString (ByteString)
+import qualified Data.ByteString.Lazy as LBS
 import qualified Data.ByteString.UTF8 as BSU
-import Data.Maybe (fromJust)
 import Network.HTTP.Client
 import Network.HTTP.Client.TLS
+import Network.HTTP.Types.Status
 import System.Environment (lookupEnv)
 
 import SimFin.Util
@@ -55,15 +58,28 @@ makeRequest apiKey path query =
   setQueryString (("api-key", Just apiKey) : query)
   $ baseRequest { path = basePath <> path }
 
-performRequest
+performGenericRequest
   :: ( MonadIO m
      , FromJSON a
+     , FromJSON e
      )
-  => SimFinContext
+  => (LBS.ByteString -> String -> e)
+  -> (Value -> String -> e)
+  -> SimFinContext
   -> ByteString
   -> [QueryParam]
-  -> m a
-performRequest SimFinContext{..} path query = do
+  -> m (Either e a)
+performGenericRequest mkDecodeErr mkParseErr SimFinContext{..} path query = do
   let req = makeRequest simFinApiKey path query
   res <- liftIO $ httpLbs req simFinManager
-  pure $ fromJust $ decode $ responseBody res
+  let body = responseBody res
+  -- Try to parse body into generic JSON
+  pure $ case eitherDecode $ responseBody res of
+    Left err -> Left $ mkDecodeErr body err
+    Right value -> case statusCode $ responseStatus res of
+      200 -> case parse parseJSON value of
+        Error err -> Left $ mkParseErr value err
+        Success a -> Right a
+      _ -> case parse parseJSON value of
+        Error err -> Left $ mkParseErr value err
+        Success a -> Left a

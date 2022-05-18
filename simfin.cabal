@@ -11,6 +11,8 @@ category:           Web
 
 library
     exposed-modules:  SimFin.Plus
+                    , SimFin.Free
+                    , SimFin.Common
                     , SimFin.Types.BalanceSheet
                     , SimFin.Types.CashFlow
                     , SimFin.Types.CompanyInfo
@@ -29,6 +31,7 @@ library
                     , SimFin.Util
     other-modules:    SimFin.Internal
     build-depends:    base >=4.14.3.0
+                    , composition-extra
                     , http-client-tls
                     , http-client
                     , exceptions
@@ -46,5 +49,10 @@ test-suite simfin-test
     default-language: Haskell2010
     type:             exitcode-stdio-1.0
     hs-source-dirs:   test
-    main-is:          MyLibTest.hs
+    main-is:          Test.hs
     build-depends:    base >=4.14.3.0
+                    , simfin
+                    , aeson
+                    , text
+                    , tasty
+                    , tasty-hunit

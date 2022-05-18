@@ -7,6 +7,7 @@ module SimFin.Types.CashFlow
   , BankCashFlowRow(..)
   , InsuranceCashFlowRow(..)
   , IndustryCashFlows
+  , IndustryCashFlow
   ) where
 
 import Control.Applicative ((<|>))
@@ -449,10 +450,13 @@ type IndustryCashFlowsKeyed
 type IndustryCashFlows
   = Industry [GeneralCashFlowRow] [BankCashFlowRow] [InsuranceCashFlowRow]
 
+type IndustryCashFlow
+  = Industry GeneralCashFlowRow BankCashFlowRow InsuranceCashFlowRow
+
 instance FromJSON IndustryCashFlowsKeyed where
-  parseJSON json = Insurance <$> parseJSON json
-    <|> Bank <$> parseJSON json
-    <|> General <$> parseJSON json
+  parseJSON root = Insurance <$> parseJSON root
+    <|> Bank <$> parseJSON root
+    <|> General <$> parseJSON root
 
 unKeyIndustryCashFlows :: IndustryCashFlowsKeyed -> IndustryCashFlows
 unKeyIndustryCashFlows = mapIndustry
@@ -461,4 +465,4 @@ unKeyIndustryCashFlows = mapIndustry
   unKeyInsuranceCashFlows
 
 instance FromJSON IndustryCashFlows where
-  parseJSON json = unKeyIndustryCashFlows <$> parseJSON json
+  parseJSON root = unKeyIndustryCashFlows <$> parseJSON root

@@ -5,12 +5,13 @@ module SimFin.Types.StringFrac
 import Data.Aeson
 import Data.Aeson.Types (typeMismatch)
 import qualified Data.Text as T
+import Text.Read (readEither)
 
 newtype StringFrac a = StringFrac a
   deriving Show
 
 instance (Read a, RealFrac a) => FromJSON (StringFrac a) where
-  parseJSON (String s) = case read $ T.unpack s of
+  parseJSON (String s) = case readEither $ T.unpack s of
     Left err -> fail err
     Right a -> pure $ StringFrac a
   parseJSON (Number n) = pure $ StringFrac $ realToFrac n

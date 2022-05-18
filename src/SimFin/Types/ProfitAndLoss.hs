@@ -7,6 +7,7 @@ module SimFin.Types.ProfitAndLoss
   , BankProfitAndLossRow(..)
   , InsuranceProfitAndLossRow(..)
   , IndustryProfitsAndLosses
+  , IndustryProfitAndLoss
   ) where
 
 import Control.Applicative ((<|>))
@@ -454,10 +455,13 @@ type IndustryProfitsAndLossesKeyed
 type IndustryProfitsAndLosses
   = Industry [GeneralProfitAndLossRow] [BankProfitAndLossRow] [InsuranceProfitAndLossRow]
 
+type IndustryProfitAndLoss
+  = Industry GeneralProfitAndLossRow BankProfitAndLossRow InsuranceProfitAndLossRow
+
 instance FromJSON IndustryProfitsAndLossesKeyed where
-  parseJSON json = General <$> parseJSON json
-    <|> Insurance <$> parseJSON json
-    <|> Bank <$> parseJSON json
+  parseJSON root = General <$> parseJSON root
+    <|> Insurance <$> parseJSON root
+    <|> Bank <$> parseJSON root
 
 unKeyIndustryProfitsAndLosses :: IndustryProfitsAndLossesKeyed -> IndustryProfitsAndLosses
 unKeyIndustryProfitsAndLosses = mapIndustry
@@ -466,4 +470,4 @@ unKeyIndustryProfitsAndLosses = mapIndustry
   unKeyInsuranceProfitsAndLosses
 
 instance FromJSON IndustryProfitsAndLosses where
-  parseJSON json = unKeyIndustryProfitsAndLosses <$> parseJSON json
+  parseJSON root = unKeyIndustryProfitsAndLosses <$> parseJSON root

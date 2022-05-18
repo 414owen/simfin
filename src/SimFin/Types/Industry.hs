@@ -1,7 +1,10 @@
 module SimFin.Types.Industry
   ( Industry(..)
   , mapIndustry
+  , invertIndustries
   ) where
+
+import Data.Foldable
 
 data Industry general bank insurance
   = General general
@@ -15,3 +18,11 @@ mapIndustry f g h industry = case industry of
   Bank a -> Bank $ g a
   Insurance a -> Insurance $ h a
 
+invertIndustry :: Industry [a] [b] [c] -> [Industry a b c]
+invertIndustry ind = case ind of
+  General as -> General <$> as
+  Bank bs -> Bank <$> bs
+  Insurance cs -> Insurance <$> cs
+
+invertIndustries :: [Industry [a] [b] [c]] -> [Industry a b c]
+invertIndustries = fold . fmap invertIndustry
