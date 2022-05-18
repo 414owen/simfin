@@ -86,7 +86,7 @@ ensureNE _ = pure ()
 tests :: SimFinContext -> TestTree
 tests ctx = testGroup "SimFin"
   [ testCase "List companies" $ testFetchList $ fetchCompanyList ctx
-  , testCase "Company Info" $ testFetchMaybe $ fetchCompanyInfo ctx $ pure "AAPL"
+  , testCase "Company Info" $ testFetchMaybe $ fetchCompanyInfo ctx "AAPL"
   , testGroup "Balance Sheet"
     [ testCase "General" $ testBalanceSheet "AAPL" general
     , testCase "Bank" $ testBalanceSheet "C" bank

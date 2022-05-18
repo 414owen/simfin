@@ -46,7 +46,6 @@ module SimFin.Free
 import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Data.Functor.Syntax
-import Data.List.NonEmpty (NonEmpty)
 import Data.Maybe (listToMaybe)
 
 import SimFin.Common
@@ -72,11 +71,11 @@ import SimFin.Types.StockRef
 fetchCompanyInfo
   :: (MonadThrow m, MonadIO m)
   => SimFinContext
-  -> NonEmpty StockRef
+  -> StockRef
   -> m (ApiResult (Maybe CompanyInfoRow))
 fetchCompanyInfo ctx refs = do
   rows :: ApiResult [CompanyInfoRow] <- performRequest ctx "companies/general"
-    $ stockRefsToQueryParams refs
+    $ stockRefsToQueryParams $ pure refs
   pure $ listToMaybe <$> rows
 
 ------
