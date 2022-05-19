@@ -13,7 +13,7 @@ import Data.Maybe
 import Data.Either
 import qualified Data.Text as T
 import Graphics.Rendering.Chart.Easy hiding (close)
-import Graphics.Rendering.Chart.Backend.Cairo
+import Graphics.Rendering.Chart.Backend.Diagrams
 
 import SimFin.Free
 
@@ -44,10 +44,11 @@ main = do
   pricesRes :: [ApiResult [PricesRow Double]] <- traverse (fetchPrices ctx) stonks
   let prices :: [(String, [(LocalTime, Double)])] = toLine <$> rights pricesRes
 
-  toFile def "prices.png" $ do
+  toFile def "prices.svg" $ do
     layout_title .= "Price History"
     layout_background .= solidFillStyle (opaque white)
     layout_foreground .= (opaque black)
     layout_left_axis_visibility . axis_show_ticks .= False
+    -- layout_left_axis_title . axis_show_ticks .= False
     forM_ prices $ \(name, pts)-> plot (line name [ pts ] )
   pure ()

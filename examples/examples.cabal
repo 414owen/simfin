@@ -13,7 +13,7 @@ executable examples
                     , simfin
                     , time
                     , Chart
-                    , Chart-cairo
+                    , Chart-diagrams
                     , text
     hs-source-dirs:   app
     default-language: Haskell2010
