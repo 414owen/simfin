@@ -8,17 +8,18 @@ No SimFin+ features have been tested at all yet.
 
 ## TODO:
 
-* Handle upgrade prompt answers
-* Add shares outstanding call
-* Differentiate between ticker/id missing vs. time period missing
-* Expose currency in Price data
-* Move tests to test suite
-  * Requires making an Internal module?
-* Add CI
-* Add examples (with charts?)
-* Add documentation
-* Publish to Hackage
+* [x] ~Handle upgrade prompt answers~
+* [ ] Add shares outstanding call
+* [ ] ~Differentiate between ticker/id missing vs. time period missing~
+  Won't do, you can figure it out form the response anyway.
+* [ ] Expose currency in Price data
+* [x] ~Move tests to test suite~
+  * [x] ~Requires making an Internal module?~
+* [x] ~Add CI~
+* [ ] Add examples (with charts?)
+* [ ] Add documentation
+* [ ] Publish to Hackage
 
 ## Might Do
 
-* Specialize Standard / SimFin+ data structures and results
+* [x] ~Specialize Standard / SimFin+ data structures and results~
