@@ -23,7 +23,7 @@ module SimFin.Free
   , DerivedRow(..)
   , PricesRow(..)
 
-  , PricesQueryFree(..)
+  , PricesQueryFree
   , StatementQueryFree(..)
 
   , StockRef(..)

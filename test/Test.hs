@@ -27,13 +27,6 @@ testStatementQuery ref = StatementQueryFree
   , ttm = False
   }
 
-testPricesQuery :: Text -> PricesQueryFree
-testPricesQuery ref = PricesQueryFree
-  { stockRef = Ticker ref
-  , start = Nothing
-  , end = Nothing
-  }
-
 type UnitIndustry = Industry () () ()
 
 general :: UnitIndustry
@@ -129,5 +122,5 @@ tests ctx = testGroup "SimFin"
     testDerived :: Text -> Assertion
     testDerived ticker = testFetchMaybe $ testStmt fetchDerived ticker
 
-    testFetchPrices :: Text -> IO ()
-    testFetchPrices ticker = testFetchList $ fetchPrices ctx $ testPricesQuery ticker
+    testFetchPrices :: StockRef -> IO ()
+    testFetchPrices ticker = testFetchList $ fetchPrices ctx ticker

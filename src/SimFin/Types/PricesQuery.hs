@@ -4,7 +4,7 @@
 
 module SimFin.Types.PricesQuery
   ( PricesQuery(..)
-  , PricesQueryFree(..)
+  , PricesQueryFree
   , pricesQueryToQueryParams
   , pricesQueryFreeToQueryParams
   ) where
@@ -24,12 +24,7 @@ data PricesQuery
   , asReported :: Bool
   } deriving Show
 
-data PricesQueryFree
-  = PricesQueryFree
-  { stockRef :: StockRef
-  , start :: Maybe Day
-  , end :: Maybe Day
-  } deriving Show
+type PricesQueryFree = StockRef
 
 pricesQueryToQueryParams :: PricesQuery -> [QueryParam]
 pricesQueryToQueryParams PricesQuery{..} = 
@@ -47,11 +42,11 @@ pricesQueryToQueryParams PricesQuery{..} =
     ]
 
 freeToPlus :: PricesQueryFree -> PricesQuery
-freeToPlus PricesQueryFree{..}
+freeToPlus stockRef
   = PricesQuery
   { stockRefs = pure stockRef
-  , start = start
-  , end = end
+  , start = Nothing
+  , end = Nothing
   , asReported = False
   }
 
