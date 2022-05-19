@@ -1,34 +1,40 @@
 on:
-  - push
-  - pull_request
+  workflow_dispatch:
+  pull_request:
+    types: [synchronize, opened, reopened]
+  push:
+    branches: [main]
+  schedule:
+    # additionally run once per week (At 00:00 on Sunday) to maintain cache
+    - cron: '0 0 * * 0'
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        cabal: ["3.4"]
+        ghc: ["8.8.4", "8.10.5", "9.2.2"]
+    env:
+      CONFIG: "--enable-tests --enable-benchmarks"
+      SIM_FIN_API_KEY: ${{ secrets.SIM_FIN_API_KEY }}
+
     steps:
-    - uses: actions/checkout@v3
-
-    - name: Set all tracked file modification times to the time of their last commit
-      run: |
-        rev=HEAD
-        for f in $(git ls-tree -r -t --full-name --name-only "$rev") ; do
-            touch -d $(git log --pretty=format:%cI -1 "$rev" -- "$f") "$f";
-        done
-
-    - name: Update cabal cache
-      run: cabal update
-
-    - name: Cache Cabal build artifacts
-      uses: actions/cache@v2
-      with:
-        path: |
-          ${{ steps.setup-haskell-build-env.outputs.cabal-store }}
-          dist-newstyle
-        key: ${{ runner.os }}-cabal-${{ matrix.ghc }}-${{ hashFiles('simfin.cabal') }}
-        restore-keys: |
-          ${{ runner.os }}-cabal-${{ matrix.ghc }}
-
-    - name: Run tests
-      env:
-        SIM_FIN_API_KEY: ${{ secrets.SIM_FIN_API_KEY }}
-      run: cabal v2-test
+      - uses: actions/checkout@v2.3.4
+      - uses: haskell/actions/setup@v1.2
+        with:
+          ghc-version: ${{ matrix.ghc }}
+          cabal-version: ${{ matrix.cabal }}
+      - run: cabal v2-update
+      - run: cabal v2-freeze $CONFIG
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cabal/store
+            dist-newstyle
+          key: ${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('cabal.project.freeze') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.ghc }}-
+      - run: cabal v2-build $CONFIG
+      - run: cabal v2-test $CONFIG
+      - run: cabal v2-haddock $CONFIG

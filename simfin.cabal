@@ -30,7 +30,7 @@ library
                     , SimFin.Types.StringFrac
                     , SimFin.Util
     other-modules:    SimFin.Internal
-    build-depends:    base >=4.14.3.0
+    build-depends:    base >=4.13.0.0
                     , composition-extra
                     , http-client-tls
                     , http-client
@@ -50,7 +50,7 @@ test-suite simfin-test
     type:             exitcode-stdio-1.0
     hs-source-dirs:   test
     main-is:          Test.hs
-    build-depends:    base >=4.14.3.0
+    build-depends:    base >=4.13.0.0
                     , simfin
                     , aeson
                     , text
