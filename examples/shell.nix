@@ -1,4 +1,4 @@
-{ nixpkgs ? import <unstable> {}, compiler ? "ghc922", doBenchmark ? false }:
+{ nixpkgs ? import <nixpkgs> {}, compiler ? "default", doBenchmark ? false }:
 
 let
 
@@ -14,7 +14,7 @@ let
   variant = if doBenchmark then pkgs.haskell.lib.doBenchmark else pkgs.lib.id;
 
   drv = variant (haskellPackages.callPackage f {
-    simfin = haskellPackages.callPackage simfin;
+    simfin = pkgs.haskell.lib.dontCheck (haskellPackages.callPackage simfin {});
   });
 
 in

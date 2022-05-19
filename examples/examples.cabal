@@ -11,7 +11,9 @@ executable examples
     main-is:          Main.hs
     build-depends:    base >=4.13.0.0
                     , simfin
+                    , time
                     , Chart
                     , Chart-cairo
+                    , text
     hs-source-dirs:   app
     default-language: Haskell2010
