@@ -8,7 +8,6 @@ module SimFin.Types.CompanyInfo
 import Control.Monad ((>=>))
 import Data.Aeson
 import Data.Aeson.Types (Parser)
-import Data.Aeson.KeyMap (KeyMap)
 import Data.Text (Text)
 
 import SimFin.Util
@@ -27,7 +26,7 @@ data CompanyInfoRow
 instance FromJSON CompanyInfoRow where
   parseJSON = createKeyedRow >=> withObject "CompanyInfoRow" f
     where
-      f :: KeyMap Value -> Parser CompanyInfoRow
+      f :: Object -> Parser CompanyInfoRow
       f = \v -> CompanyInfoRow
         <$> v .: "SimFinId"
         <*> v .: "Ticker"
