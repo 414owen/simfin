@@ -17,11 +17,14 @@ import Graphics.Rendering.Chart.Backend.Diagrams
 
 import SimFin.Free
 
-day2020 :: Day
-day2020 = fromGregorian 2020 01 01
-
 to5pm :: Day -> LocalTime
 to5pm = flip LocalTime $ dayFractionToTimeOfDay $ 17 / 24
+
+day2015 :: Day
+day2015 = fromGregorian 2015 01 01
+
+after2014 :: [PricesRow a] -> [PricesRow a]
+after2014 = filter ((> Just day2015) . date)
 
 toDataPoint :: PricesRow Double -> Maybe (LocalTime, Double)
 toDataPoint row = do
@@ -31,13 +34,13 @@ toDataPoint row = do
 stonks :: [StockRef]
 stonks = ["GOOG", "AAPL", "TWTR", "NFLX"]
 
-getLineName :: PricesRow a -> String
-getLineName PricesRow{ticker = t} = T.unpack $ t
-
 type LineData = (String, [(LocalTime, Double)])
 
 toLine :: [PricesRow Double] -> LineData
-toLine pts@(x : xs) = (getLineName x, catMaybes $ toDataPoint <$> pts)
+toLine pts@(PricesRow{ticker = t} : xs) =
+  ( T.unpack t
+  , catMaybes $ toDataPoint <$> after2014 pts
+  )
 
 main :: IO ()
 main = do
