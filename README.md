@@ -10,6 +10,7 @@ No SimFin+ features have been tested at all yet.
 
 ## TODO:
 
+* Move to `Web` namespace
 * [x] ~Handle upgrade prompt answers~
 * [ ] Add shares outstanding call
 * [ ] ~Differentiate between ticker/id missing vs. time period missing~
