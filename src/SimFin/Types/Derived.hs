@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleInstances #-}
 
@@ -26,34 +27,34 @@ data DerivedRow a
   , source :: Text
   , tTM :: Bool
   , valueCheck :: Bool
-  , eBITDA :: Maybe (StringFrac a)
-  , totalDebt :: Maybe (StringFrac a)
-  , freeCashFlow :: Maybe (StringFrac a)
-  , grossProfitMargin :: Maybe (StringFrac a)
-  , operatingMargin :: Maybe (StringFrac a)
-  , netProfitMargin :: Maybe (StringFrac a)
-  , returnOnEquity :: Maybe (StringFrac a)
-  , returnOnAssets :: Maybe (StringFrac a)
-  , freeCashFlowToNetIncome :: Maybe (StringFrac a)
-  , currentRatio :: Maybe (StringFrac a)
-  , liabilitiesToEquityRatio :: Maybe (StringFrac a)
-  , debtRatio :: Maybe (StringFrac a)
-  , earningsPerShareBasic :: Maybe (StringFrac a)
-  , earningsPerShareDiluted :: Maybe (StringFrac a)
-  , salesPerShare :: Maybe (StringFrac a)
-  , equityPerShare :: Maybe (StringFrac a)
-  , freeCashFlowPerShare :: Maybe (StringFrac a)
-  , dividendsPerShare :: Maybe (StringFrac a)
+  , eBITDA :: Maybe a
+  , totalDebt :: Maybe a
+  , freeCashFlow :: Maybe a
+  , grossProfitMargin :: Maybe a
+  , operatingMargin :: Maybe a
+  , netProfitMargin :: Maybe a
+  , returnOnEquity :: Maybe a
+  , returnOnAssets :: Maybe a
+  , freeCashFlowToNetIncome :: Maybe a
+  , currentRatio :: Maybe a
+  , liabilitiesToEquityRatio :: Maybe a
+  , debtRatio :: Maybe a
+  , earningsPerShareBasic :: Maybe a
+  , earningsPerShareDiluted :: Maybe a
+  , salesPerShare :: Maybe a
+  , equityPerShare :: Maybe a
+  , freeCashFlowPerShare :: Maybe a
+  , dividendsPerShare :: Maybe a
   , piotroskiFScore :: Maybe Int
-  , returnOnInvestedCapital :: Maybe (StringFrac a)
-  , cashReturnOnInvestedCapital :: Maybe (StringFrac a)
-  , dividendPayoutRatio :: Maybe (StringFrac a)
-  , netDebtEBITDA :: Maybe (StringFrac a)
-  , netDebtEBIT :: Maybe (StringFrac a)
-  } deriving Show
+  , returnOnInvestedCapital :: Maybe a
+  , cashReturnOnInvestedCapital :: Maybe a
+  , dividendPayoutRatio :: Maybe a
+  , netDebtEBITDA :: Maybe a
+  , netDebtEBIT :: Maybe a
+  } deriving (Functor, Show)
 
 instance (Read a, RealFrac a) => FromJSON (DerivedRow a) where
-  parseJSON = withObject "DerivedRow" $ \v -> DerivedRow
+  parseJSON = withObject "DerivedRow" $ \v -> fmap (fmap unStringFrac) $ DerivedRow
     <$> v .: "SimFinId"
     <*> v .: "Ticker"
     <*> v .: "Fiscal Period"

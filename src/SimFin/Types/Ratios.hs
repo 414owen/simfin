@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedStrings #-}
 
@@ -12,23 +13,23 @@ import SimFin.Types.StringFrac
 data RatiosRow a
   = RatiosRow
   { marketCap :: Integer
-  , priceToEarningsRatioQuarterly :: Maybe (StringFrac a)
-  , priceToEarningsRatioTTM :: Maybe (StringFrac a)
-  , priceToSalesRatioQuarterly :: Maybe (StringFrac a)
-  , priceToSalesRatioTTM :: Maybe (StringFrac a)
-  , priceToBookValueTTM :: Maybe (StringFrac a)
-  , priceToFreeCashFlowQuarterly :: Maybe (StringFrac a)
-  , priceToFreeCashFlowTTM :: Maybe (StringFrac a)
-  , enterpriseValueTTM :: Maybe (StringFrac a)
-  , eVEBITDATTM :: Maybe (StringFrac a)
-  , eVSalesTTM :: Maybe (StringFrac a)
-  , eVFCFTTM :: Maybe (StringFrac a)
-  , bookToMarketValueTTM :: Maybe (StringFrac a)
-  , operatingIncomeEVTTM :: Maybe (StringFrac a)
-  } deriving Show
+  , priceToEarningsRatioQuarterly :: Maybe a
+  , priceToEarningsRatioTTM :: Maybe a
+  , priceToSalesRatioQuarterly :: Maybe a
+  , priceToSalesRatioTTM :: Maybe a
+  , priceToBookValueTTM :: Maybe a
+  , priceToFreeCashFlowQuarterly :: Maybe a
+  , priceToFreeCashFlowTTM :: Maybe a
+  , enterpriseValueTTM :: Maybe a
+  , eVEBITDATTM :: Maybe a
+  , eVSalesTTM :: Maybe a
+  , eVFCFTTM :: Maybe a
+  , bookToMarketValueTTM :: Maybe a
+  , operatingIncomeEVTTM :: Maybe a
+  } deriving (Functor, Show)
 
 instance (Read a, RealFrac a) => FromJSON (RatiosRow a) where
-  parseJSON = withObject "RatiosRow" $ \v -> RatiosRow
+  parseJSON = withObject "RatiosRow" $ \v -> fmap (fmap unStringFrac) $ RatiosRow
     <$> v .: "Market-Cap"
     <*> v .: "Price to Earnings Ratio (quarterly)"
     <*> v .: "Price to Earnings Ratio (ttm)"

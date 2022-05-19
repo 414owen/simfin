@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedStrings #-}
 
@@ -16,7 +17,7 @@ data PricesAndRatiosRow a
   = PricesAndRatiosRow
   { prices :: PricesRow a
   , ratios :: RatiosRow a
-  } deriving Show
+  } deriving (Functor, Show)
 
 instance (Read a, RealFrac a) => FromJSON (PricesAndRatiosRow a) where
   parseJSON v = PricesAndRatiosRow

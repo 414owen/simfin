@@ -1,4 +1,6 @@
+{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module SimFin.Types.Prices
@@ -18,18 +20,18 @@ data PricesRow a
   { simFinId :: Int
   , ticker :: Text
   , date :: Maybe Day
-  , open :: StringFrac a
-  , high :: StringFrac a
-  , low :: StringFrac a
-  , close :: StringFrac a
-  , adjClose :: StringFrac a
+  , open :: a
+  , high :: a
+  , low :: a
+  , close :: a
+  , adjClose :: a
   , volume :: Integer
-  , dividend :: Maybe (StringFrac a)
+  , dividend :: Maybe a
   , commonSharesOutstanding :: Maybe Integer
-  } deriving Show
+  } deriving (Functor, Show)
 
 instance (Read a, RealFrac a) => FromJSON (PricesRow a) where
-  parseJSON = withObject "PricesRow" $ \v -> PricesRow
+  parseJSON = withObject "PricesRow" $ \v -> fmap (fmap unStringFrac) $ PricesRow
     <$> v .: "SimFinId"
     <*> v .: "Ticker"
     <*> v .: "Date"

@@ -7,7 +7,7 @@ import Data.Aeson.Types (typeMismatch)
 import qualified Data.Text as T
 import Text.Read (readEither)
 
-newtype StringFrac a = StringFrac a
+newtype StringFrac a = StringFrac { unStringFrac :: a }
   deriving Show
 
 instance (Read a, RealFrac a) => FromJSON (StringFrac a) where
