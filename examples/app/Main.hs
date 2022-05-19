@@ -34,7 +34,9 @@ stonks = ["GOOG", "AAPL", "TWTR", "NFLX"]
 getLineName :: PricesRow a -> String
 getLineName PricesRow{ticker = t} = T.unpack $ t
 
-toLine :: [PricesRow Double] -> (String, [(LocalTime, Double)])
+type LineData = (String, [(LocalTime, Double)])
+
+toLine :: [PricesRow Double] -> LineData
 toLine pts@(x : xs) = (getLineName x, catMaybes $ toDataPoint <$> pts)
 
 main :: IO ()
@@ -42,13 +44,14 @@ main = do
   ctx <- createDefaultContext
 
   pricesRes :: [ApiResult [PricesRow Double]] <- traverse (fetchPrices ctx) stonks
-  let prices :: [(String, [(LocalTime, Double)])] = toLine <$> rights pricesRes
+  let prices :: [LineData] = toLine <$> rights pricesRes
 
   toFile def "prices.svg" $ do
     layout_title .= "Price History"
     layout_background .= solidFillStyle (opaque white)
-    layout_foreground .= (opaque black)
+    layout_foreground .= opaque black
     layout_left_axis_visibility . axis_show_ticks .= False
-    -- layout_left_axis_title . axis_show_ticks .= False
-    forM_ prices $ \(name, pts)-> plot (line name [ pts ] )
+    layout_x_axis . laxis_title .= "Date"
+    layout_y_axis . laxis_title .= "Price ($)"
+    forM_ prices $ \(name, pts) -> plot $ line name [pts]
   pure ()
