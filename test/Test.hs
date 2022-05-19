@@ -32,7 +32,6 @@ testPricesQuery ref = PricesQueryFree
   { stockRef = Ticker ref
   , start = Nothing
   , end = Nothing
-  , asReported = False
   }
 
 type UnitIndustry = Industry () () ()

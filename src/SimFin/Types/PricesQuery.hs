@@ -29,7 +29,6 @@ data PricesQueryFree
   { stockRef :: StockRef
   , start :: Maybe Day
   , end :: Maybe Day
-  , asReported :: Bool
   } deriving Show
 
 pricesQueryToQueryParams :: PricesQuery -> [QueryParam]
@@ -53,7 +52,7 @@ freeToPlus PricesQueryFree{..}
   { stockRefs = pure stockRef
   , start = start
   , end = end
-  , asReported = asReported
+  , asReported = False
   }
 
 pricesQueryFreeToQueryParams :: PricesQueryFree -> [QueryParam]
