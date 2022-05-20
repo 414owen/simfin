@@ -71,11 +71,11 @@ main = do
   let prices :: [LineData] = toLines $ catMaybes $ rights pricesRes
 
   toFile def "eps-diluted.svg" $ do
-    layout_title .= "Price History"
+    layout_title .= "Diluted Earnings per Share"
     layout_background .= solidFillStyle (opaque white)
     layout_foreground .= opaque black
     layout_left_axis_visibility . axis_show_ticks .= False
     layout_x_axis . laxis_title .= "Date"
-    layout_y_axis . laxis_title .= "Diluted Earnings per Share ($)"
+    layout_y_axis . laxis_title .= "Diluted EPS ($)"
     forM_ prices $ \(name, pts) -> plot $ line name [NE.toList pts]
   pure ()

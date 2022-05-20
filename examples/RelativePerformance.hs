@@ -70,11 +70,11 @@ main = do
   let prices :: [LineData] = toLines $ rights pricesRes
 
   toFile def "relative-prices.svg" $ do
-    layout_title .= "Price History"
+    layout_title .= "Relative Performance"
     layout_background .= solidFillStyle (opaque white)
     layout_foreground .= opaque black
     layout_left_axis_visibility . axis_show_ticks .= False
     layout_x_axis . laxis_title .= "Date"
-    layout_y_axis . laxis_title .= "Performance (%)"
+    layout_y_axis . laxis_title .= "Performance (relative to start) (%)"
     forM_ prices $ \(name, pts) -> plot $ line name [NE.toList pts]
   pure ()

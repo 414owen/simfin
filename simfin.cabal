@@ -80,7 +80,7 @@ executable graph-eps
     build-depends:    containers
                     , multi-containers
 
-executable graph-relative-prices
+executable graph-relative-performance
     import:           examples-common
-    main-is:          RelativePrices.hs
+    main-is:          RelativePerformance.hs
                     
