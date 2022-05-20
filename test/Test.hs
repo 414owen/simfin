@@ -1,5 +1,4 @@
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE LambdaCase#-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Main
