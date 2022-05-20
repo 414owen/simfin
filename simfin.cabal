@@ -70,6 +70,7 @@ common examples-common
                     , simfin
                     , time
                     , Chart >= 1.9
+                    , SVGFonts < 1.8
                     , Chart-diagrams >= 1.9
                     , text
                     , simfin
