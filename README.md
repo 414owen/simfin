@@ -10,7 +10,7 @@ No SimFin+ features have been tested at all yet.
 
 ## TODO:
 
-* Move to `Web` namespace
+* [ ] Move to `Web` namespace
 * [x] ~Handle upgrade prompt answers~
 * [ ] Add shares outstanding call
 * [ ] ~Differentiate between ticker/id missing vs. time period missing~
@@ -26,3 +26,4 @@ No SimFin+ features have been tested at all yet.
 ## Might Do
 
 * [x] ~Specialize Standard / SimFin+ data structures and results~
+* [ ] Don't export all constructors, but let people import them individually, so they don't have to use `DuplicateRecordFields`?
