@@ -69,8 +69,8 @@ common examples-common
     build-depends:    base >= 4.13.0.0 && < 5
                     , simfin
                     , time
-                    , Chart
-                    , Chart-diagrams
+                    , Chart >= 1.9
+                    , Chart-diagrams >= 1.9
                     , text
                     , simfin
 
