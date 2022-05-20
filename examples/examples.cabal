@@ -25,8 +25,8 @@ executable graph-relative-prices
     import:           common
     main-is:          RelativePrices.hs
 
-executable graph-relative-earnings-per-share
+executable graph-relative-earnings-per-share-changes
     import:           common
-    main-is:          EarningsPerShareChanges.hs
+    main-is:          RelativeEarningsPerShareChanges.hs
     build-depends:    containers
                     , multi-containers

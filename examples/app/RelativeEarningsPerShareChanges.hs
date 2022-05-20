@@ -94,7 +94,7 @@ main = do
   pricesRes :: [ApiResult (Maybe (DerivedRow Double))] <- traverse (fetchDerived ctx) stockQueries
   let prices :: [LineData] = toLines $ catMaybes $ rights pricesRes
 
-  toFile def "eps-changes.svg" $ do
+  toFile def "relative-eps-changes.svg" $ do
     layout_title .= "Price History"
     layout_background .= solidFillStyle (opaque white)
     layout_foreground .= opaque black
