@@ -1,3 +1,11 @@
+{-|
+Module      : SimFin.Types.Common
+Description : Types and functions common to the free and paid APIs.
+Copyright   : (c) Owen Shepherd, 2022
+License     : MIT
+Maintainer  : owen@owen.cafe
+-}
+
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE LambdaCase #-}
 
@@ -19,12 +27,15 @@ import qualified Data.Text as T
 import SimFin.Internal
 import SimFin.Types.CompanyListing
 
+-- | Represents all the types of error the server returns, or we can encounter
+-- | on our side.
 
 data ApiError
-  -- Can't turn ByteString into JSON
+  -- | Can't turn ByteString into JSON
   = DecodeError LBS.ByteString String
-  -- Can't turn JSON into result type
+  -- | Can't turn JSON into result type
   | ParseError Value String
+  -- | Server returned '{"error": "..."}' along with a non-200 status code.
   -- This could in theory be parsed into machine-readable format,
   -- with variants such as `InvalidApiKey | RateLimited | ...`, but 
   -- the API doesn't guarantee error message stability.
@@ -35,10 +46,14 @@ instance Show ApiError where
   show (ParseError _ err) = "Couldn't parse JSON value. Err: " <> err
   show (Other err) = "Server returned error: " <> T.unpack err
 
+-- | The result of calling fetch* is either an error or a successful result.
+
 type ApiResult = Either ApiError
 
 instance FromJSON ApiError where
   parseJSON = withObject "Root" $ \v -> Other <$> v .: "error"
+
+-- | Make a request, all fetch* functions call this.
 
 performRequest
   :: ( MonadIO m
@@ -54,6 +69,9 @@ performRequest = performGenericRequest DecodeError ParseError
 ------
 -- List companies
 ------
+
+-- | Fetch a list of company tickers and SimFin ids.
+-- | This is the only endpoint common to free and paid customers.
 
 fetchCompanyList
   :: (MonadThrow m, MonadIO m)

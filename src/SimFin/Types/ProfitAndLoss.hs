@@ -1,3 +1,11 @@
+{-|
+Module      : SimFin.Types.ProfitAndLoss
+Description : Types to represent a company's profit and loss statement.
+Copyright   : (c) Owen Shepherd, 2022
+License     : MIT
+Maintainer  : owen@owen.cafe
+-}
+
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -22,6 +30,8 @@ import SimFin.Internal
 ------
 -- General
 ------
+
+-- | Cash flow statement for general companies. 
 
 data GeneralProfitAndLossRow
   = GeneralProfitAndLossRow
@@ -166,6 +176,8 @@ instance FromJSON GeneralProfitAndLossRow where
     <*> v .: "Other Adjustments"
     <*> v .: "Net Income (Common)"
 
+-- | Wrapper to parse a GeneralProfitAndLossRow record from SimFin's JSON format.
+
 newtype GeneralProfitsAndLossesKeyed = GeneralProfitsAndLossesKeyed { unKeyGeneralProfitsAndLosses :: [GeneralProfitAndLossRow] }
 
 instance FromJSON GeneralProfitsAndLossesKeyed where
@@ -175,6 +187,8 @@ instance FromJSON GeneralProfitsAndLossesKeyed where
 ------
 -- Bank
 ------
+
+-- | Cash flow statement for banks. 
 
 data BankProfitAndLossRow
   = BankProfitAndLossRow
@@ -301,6 +315,8 @@ instance FromJSON BankProfitAndLossRow where
     <*> v .: "Other Adjustments"
     <*> v .: "Net Income (Common)"
 
+-- | Wrapper to parse a BankProfitAndLossRow record from SimFin's JSON format.
+
 newtype BankProfitsAndLossesKeyed = BankProfitsAndLossesKeyed { unKeyBankProfitsAndLosses :: [BankProfitAndLossRow] }
 
 instance FromJSON BankProfitsAndLossesKeyed where
@@ -310,6 +326,8 @@ instance FromJSON BankProfitsAndLossesKeyed where
 ------
 -- Insurance
 ------
+
+-- | Cash flow statement for insurance companies. 
 
 data InsuranceProfitAndLossRow
   = InsuranceProfitAndLossRow
@@ -440,6 +458,8 @@ instance FromJSON InsuranceProfitAndLossRow where
     <*> v .: "Other Adjustments"
     <*> v .: "Net Income (Common)"
 
+-- | Wrapper to parse an InsuranceProfitAndLossRow record from SimFin's JSON format.
+
 newtype InsuranceProfitsAndLossesKeyed = InsuranceProfitsAndLossesKeyed { unKeyInsuranceProfitsAndLosses :: [InsuranceProfitAndLossRow] }
 
 instance FromJSON InsuranceProfitsAndLossesKeyed where
@@ -452,8 +472,12 @@ instance FromJSON InsuranceProfitsAndLossesKeyed where
 type IndustryProfitsAndLossesKeyed
   = Industry GeneralProfitsAndLossesKeyed BankProfitsAndLossesKeyed InsuranceProfitsAndLossesKeyed
 
+-- | Discrimination of profit and loss lists.
+
 type IndustryProfitsAndLosses
   = Industry [GeneralProfitAndLossRow] [BankProfitAndLossRow] [InsuranceProfitAndLossRow]
+
+-- | Discrimination of profit and losses.
 
 type IndustryProfitAndLoss
   = Industry GeneralProfitAndLossRow BankProfitAndLossRow InsuranceProfitAndLossRow

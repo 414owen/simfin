@@ -1,3 +1,11 @@
+{-|
+Module      : SimFin.Types.BalanceSheet
+Description : Types to represent a company's balance sheet statement.
+Copyright   : (c) Owen Shepherd, 2022
+License     : MIT
+Maintainer  : owen@owen.cafe
+-}
+
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -21,6 +29,8 @@ import SimFin.Internal
 ------
 -- General
 ------
+
+-- | Balance sheet statement for general companies. 
 
 data GeneralBalanceSheetRow
   = GeneralBalanceSheetRow
@@ -219,6 +229,8 @@ instance FromJSON GeneralBalanceSheetRow where
     <*> v .: "Total Equity"
     <*> v .: "Total Liabilities & Equity"
 
+-- | Wrapper to parse a GeneralBalanceSheetRow record from SimFin's JSON format.
+
 newtype GeneralBalanceSheetsKeyed = GeneralBalanceSheetsKeyed { unKeyGeneralBalanceSheets :: [GeneralBalanceSheetRow] }
 
 instance FromJSON GeneralBalanceSheetsKeyed where
@@ -228,6 +240,8 @@ instance FromJSON GeneralBalanceSheetsKeyed where
 ------
 -- Bank
 ------
+
+-- | Balance sheet statement for banks. 
 
 data BankBalanceSheetRow =
   BankBalanceSheetRow
@@ -406,6 +420,8 @@ instance FromJSON BankBalanceSheetRow where
     <*> v .: "Total Equity"
     <*> v .: "Total Liabilities & Equity"
 
+-- | Wrapper to parse a BankBalanceSheetRow record from SimFin's JSON format.
+
 newtype BankBalanceSheetsKeyed = BankBalanceSheetsKeyed { unKeyBankBalanceSheets :: [BankBalanceSheetRow] }
 
 instance FromJSON BankBalanceSheetsKeyed where
@@ -415,6 +431,8 @@ instance FromJSON BankBalanceSheetsKeyed where
 ------
 -- Insurance
 ------
+
+-- | Balance sheet statement for insurance companies. 
 
 data InsuranceBalanceSheetRow =
   InsuranceBalanceSheetRow
@@ -523,6 +541,8 @@ instance FromJSON InsuranceBalanceSheetRow where
     <*> v .: "Total Equity"
     <*> v .: "Total Liabilities & Equity"
 
+-- | Wrapper to parse an InsuranceBalanceSheetRow record from SimFin's JSON format.
+
 newtype InsuranceBalanceSheetsKeyed = InsuranceBalanceSheetsKeyed { unKeyInsuranceBalanceSheets :: [InsuranceBalanceSheetRow] }
 
 instance FromJSON InsuranceBalanceSheetsKeyed where
@@ -536,8 +556,12 @@ instance FromJSON InsuranceBalanceSheetsKeyed where
 type IndustryBalanceSheetsKeyed
   = Industry GeneralBalanceSheetsKeyed BankBalanceSheetsKeyed InsuranceBalanceSheetsKeyed
 
+-- | Discrimination of balance sheet lists.
+
 type IndustryBalanceSheets
   = Industry [GeneralBalanceSheetRow] [BankBalanceSheetRow] [InsuranceBalanceSheetRow]
+
+-- | Discrimination of balance sheets.
 
 type IndustryBalanceSheet
   = Industry GeneralBalanceSheetRow BankBalanceSheetRow InsuranceBalanceSheetRow

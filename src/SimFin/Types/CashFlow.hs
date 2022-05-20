@@ -1,3 +1,11 @@
+{-|
+Module      : SimFin.Types.CashFlow
+Description : Types to represent a company's cash flow statement.
+Copyright   : (c) Owen Shepherd, 2022
+License     : MIT
+Maintainer  : owen@owen.cafe
+-}
+
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -22,6 +30,8 @@ import SimFin.Internal
 ------
 -- General
 ------
+
+-- | Cash flow statement for general companies. 
 
 data GeneralCashFlowRow
   = GeneralCashFlowRow
@@ -154,6 +164,8 @@ instance FromJSON GeneralCashFlowRow where
     <*> v .: "Effect of Foreign Exchange Rates"
     <*> v .: "Net Change in Cash"
 
+-- | Wrapper to parse a GeneralCashFlowRow record from SimFin's JSON format.
+
 newtype GeneralCashFlowsKeyed = GeneralCashFlowsKeyed { unKeyGeneralCashFlows :: [GeneralCashFlowRow] }
 
 instance FromJSON GeneralCashFlowsKeyed where
@@ -163,6 +175,8 @@ instance FromJSON GeneralCashFlowsKeyed where
 ------
 -- Bank
 ------
+
+-- | Cash flow statement for banks. 
 
 data BankCashFlowRow
   = BankCashFlowRow
@@ -319,6 +333,8 @@ instance FromJSON BankCashFlowRow where
     <*> v .: "Effect of Foreign Exchange Rates"
     <*> v .: "Net Change in Cash"
 
+-- | Wrapper to parse a BankCashFlowRow record from SimFin's JSON format.
+
 newtype BankCashFlowsKeyed = BankCashFlowsKeyed { unKeyBankCashFlows :: [BankCashFlowRow] }
 
 instance FromJSON BankCashFlowsKeyed where
@@ -328,6 +344,8 @@ instance FromJSON BankCashFlowsKeyed where
 ------
 -- Insurance
 ------
+
+-- | Cash flow statement for Insurance companies. 
 
 data InsuranceCashFlowRow
   = InsuranceCashFlowRow
@@ -434,6 +452,8 @@ instance FromJSON InsuranceCashFlowRow where
     <*> v .: "Effect of Foreign Exchange Rates"
     <*> v .: "Net Change in Cash"
 
+-- | Wrapper to parse an InsuranceCashFlowRow record from SimFin's JSON format.
+
 newtype InsuranceCashFlowsKeyed = InsuranceCashFlowsKeyed { unKeyInsuranceCashFlows :: [InsuranceCashFlowRow] }
 
 instance FromJSON InsuranceCashFlowsKeyed where
@@ -447,8 +467,12 @@ instance FromJSON InsuranceCashFlowsKeyed where
 type IndustryCashFlowsKeyed
   = Industry GeneralCashFlowsKeyed BankCashFlowsKeyed InsuranceCashFlowsKeyed
 
+-- | Discrimination of cash flow lists.
+
 type IndustryCashFlows
   = Industry [GeneralCashFlowRow] [BankCashFlowRow] [InsuranceCashFlowRow]
+
+-- | Discrimination of cash flows.
 
 type IndustryCashFlow
   = Industry GeneralCashFlowRow BankCashFlowRow InsuranceCashFlowRow

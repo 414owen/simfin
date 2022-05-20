@@ -1,3 +1,11 @@
+{-|
+Module      : SimFin.Types.StatementQuery
+Description : Types to represent SimFin statement queries.
+Copyright   : (c) Owen Shepherd, 2022
+License     : MIT
+Maintainer  : owen@owen.cafe
+-}
+
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
@@ -9,7 +17,6 @@ module SimFin.Types.StatementQuery
   , statementQueryFreeToQueryParams
   ) where
 
-import Data.ByteString (ByteString)
 import Data.List.NonEmpty (NonEmpty)
 import Data.Maybe (maybeToList)
 import Data.Time.Calendar (Day)
@@ -18,7 +25,12 @@ import SimFin.Types.FiscalPeriod
 import SimFin.Types.StockRef
 import SimFin.Internal
 
--- For SimFin+ users
+-- | This represents all options the statement endpoint supports, minus the "statement"
+-- | parameter itself, which is set by simply calling the right function.
+-- | Some of these parameters are only available to SimFin+ users.
+-- | If you provide a zero-length list for any field, the query parameter will be omitted,
+-- | and the API will try to return all relevant available statements.
+
 data StatementQuery
   = StatementQuery
   { stockRefs :: NonEmpty StockRef
@@ -32,7 +44,9 @@ data StatementQuery
   , shares :: Bool
   } deriving Show
 
-statementQueryToQueryParams :: StatementQuery -> [(ByteString, Maybe ByteString)]
+-- | Turn a 'StatementQuery' into query parameters for the SimFin "statements" endpoint.
+
+statementQueryToQueryParams :: StatementQuery -> [QueryParam]
 statementQueryToQueryParams StatementQuery{..} =
   let
     refParams = stockRefsToQueryParams stockRefs
@@ -55,8 +69,9 @@ statementQueryToQueryParams StatementQuery{..} =
     , sharesParam
     ]
 
--- For SimFin- users
--- This is a subset of the SimFin+ API
+-- | This is a subset of the StatementQuery type, which models the parameters available
+-- | to non-SimFin+ users.
+
 data StatementQueryFree
   = StatementQueryFree
   { stockRef :: StockRef
@@ -78,5 +93,7 @@ freeStatementQueryToPaidStatementQuery StatementQueryFree{..}
   , shares = False
   }
 
-statementQueryFreeToQueryParams :: StatementQueryFree -> [(ByteString, Maybe ByteString)]
+-- | Turn a 'StatementQueryFree' into query parameters for the SimFin "statements" endpoint.
+
+statementQueryFreeToQueryParams :: StatementQueryFree -> [QueryParam]
 statementQueryFreeToQueryParams = statementQueryToQueryParams . freeStatementQueryToPaidStatementQuery
