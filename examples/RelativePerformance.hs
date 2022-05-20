@@ -9,14 +9,15 @@ module Main
 
 import Control.Arrow (first, second)
 import Control.Monad
-import Data.Time.Calendar
-import Data.Time.LocalTime
+import Data.Either
+import Data.List (sort)
 import Data.List.NonEmpty (NonEmpty(..))
 import qualified Data.List.NonEmpty as NE
 import Data.Maybe
-import Data.Either
 import Data.Text (Text)
 import qualified Data.Text as T
+import Data.Time.Calendar
+import Data.Time.LocalTime
 import Graphics.Rendering.Chart.Easy hiding (close)
 import Graphics.Rendering.Chart.Backend.Diagrams
 
@@ -30,7 +31,7 @@ toPoint row = do
   pure (to5pm day, close row)
 
 stonks :: [StockRef]
-stonks = ["GOOG", "AAPL", "TWTR", "NFLX"]
+stonks = sort ["GOOG", "AAPL", "TWTR", "NFLX"]
 
 type LineData = (String, NonEmpty LinePt)
 

@@ -11,6 +11,7 @@ import Control.Monad
 import Data.Time.Clock
 import Data.Time.Calendar
 import Data.Time.LocalTime
+import Data.List (sort)
 import Data.List.NonEmpty (NonEmpty(..))
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Map as M
@@ -56,7 +57,7 @@ groupOn' :: Ord b => (a -> b) -> [a] -> [(b, NonEmpty a)]
 groupOn' f lst = M.toList $ MM.toMap $ MM.fromList $ (f &&& id) <$> lst
 
 toLines :: [DerivedRow Double] -> [LineData]
-toLines rows = do
+toLines rows = sort $ do
   (ticker, rows') <- groupOn' D.ticker rows
   pts <- maybeToList $ traverse toPoint rows'
   pure (T.unpack ticker, pts)

@@ -11,6 +11,7 @@ import Data.Time.Calendar
 import Data.Time.LocalTime
 import Data.Maybe
 import Data.Either
+import Data.List (sort)
 import qualified Data.Text as T
 import Graphics.Rendering.Chart.Easy hiding (close)
 import Graphics.Rendering.Chart.Backend.Diagrams
@@ -26,7 +27,7 @@ toDataPoint row = do
   pure (to5pm day, close row)
 
 stonks :: [StockRef]
-stonks = ["GOOG", "AAPL", "TWTR", "NFLX"]
+stonks = sort ["GOOG", "AAPL", "TWTR", "NFLX"]
 
 type LineData = (String, [(LocalTime, Double)])
 
