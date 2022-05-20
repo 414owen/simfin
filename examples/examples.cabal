@@ -17,10 +17,16 @@ common common
                     , Chart-diagrams
                     , text
 
-executable prices
+executable graph-prices
     import:           common
     main-is:          Prices.hs
 
-executable relative-prices
+executable graph-relative-prices
     import:           common
     main-is:          RelativePrices.hs
+
+executable graph-relative-earnings-per-share
+    import:           common
+    main-is:          EarningsPerShareChanges.hs
+    build-depends:    containers
+                    , multi-containers
