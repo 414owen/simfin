@@ -16,7 +16,7 @@ import Data.Text (Text)
 import Data.Time.Calendar (Day)
 
 import SimFin.Types.Industry
-import SimFin.Util
+import SimFin.Internal
 
 
 ------

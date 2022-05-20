@@ -11,7 +11,7 @@ import Data.Aeson
 
 import SimFin.Types.Prices
 import SimFin.Types.Ratios
-import SimFin.Util
+import SimFin.Internal
 
 data PricesAndRatiosRow a
   = PricesAndRatiosRow

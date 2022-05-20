@@ -1,3 +1,11 @@
+{-|
+Module      : SimFin.Types.FiscalPeriod
+Description : Types that describe a fiscal period.
+Copyright   : (c) Owen Shepherd, 2022
+License     : MIT
+Maintainer  : owen@owen.cafe
+-}
+
 {-# LANGUAGE OverloadedStrings #-}
 
 module SimFin.Types.FiscalPeriod
@@ -8,6 +16,8 @@ module SimFin.Types.FiscalPeriod
 import Data.Aeson
 import Data.ByteString (ByteString)
 import qualified Data.Text as T
+
+-- | A fiscal period as understood by the SimFin API.
 
 data FiscalPeriod = Q1 | Q2 | Q3 | Q4 | H1 | H2 | FullYear | FirstNineMonths | SixMonths
   deriving (Eq, Show)
@@ -24,6 +34,8 @@ instance FromJSON FiscalPeriod where
     "9m" -> pure FirstNineMonths
     "6m" -> pure SixMonths
     _ -> fail "Invalid fiscal year string"
+
+-- | Converts a fiscal period into a query string fragment as understood by the SimFin API.
 
 fiscalPeriodParam :: FiscalPeriod -> ByteString
 fiscalPeriodParam a = case a of

@@ -9,7 +9,7 @@ module SimFin.Types.CompanyListing
 import Data.Aeson
 import Data.Text (Text)
 
-import SimFin.Util
+import SimFin.Internal
 
 data CompanyListingRow
   = CompanyListingRow

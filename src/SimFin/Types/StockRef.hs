@@ -14,7 +14,7 @@ import Data.String
 import Data.Text (Text)
 import qualified Data.Text as T
 
-import SimFin.Util
+import SimFin.Internal
 
 data StockRef = SimFinId Int | Ticker Text
   deriving Show

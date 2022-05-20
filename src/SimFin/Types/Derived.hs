@@ -13,7 +13,7 @@ import Data.Time.Calendar (Day)
 
 import SimFin.Types.StringFrac
 import SimFin.Types.FiscalPeriod
-import SimFin.Util
+import SimFin.Internal
 
 data DerivedRow a
   = DerivedRow

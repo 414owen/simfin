@@ -16,7 +16,7 @@ import Data.Time.Calendar (Day)
 
 import SimFin.Types.FiscalPeriod
 import SimFin.Types.StockRef
-import SimFin.Util
+import SimFin.Internal
 
 -- For SimFin+ users
 data StatementQuery

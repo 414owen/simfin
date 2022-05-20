@@ -14,7 +14,7 @@ import Data.Maybe (maybeToList)
 import Data.Time.Calendar (Day)
 
 import SimFin.Types.StockRef
-import SimFin.Util
+import SimFin.Internal
 
 data PricesQuery
   = PricesQuery

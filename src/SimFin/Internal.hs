@@ -1,11 +1,17 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module SimFin.Internal
   ( SimFinContext(..)
-  , apiKeyEnvVariable
-  , createDefaultContext
+  , QueryParam
+  , createKeyedRow
+  , createKeyedRows
+  , toCommaQueryParam
+  , toBoolQueryParam
+  , toTextCommaQueryParam
+  , toShownCommaQueryParam
   , baseRequest
   , makeRequest
   , performGenericRequest
@@ -13,32 +19,28 @@ module SimFin.Internal
 
 import Control.Monad.IO.Class
 import Data.Aeson
-import Data.Aeson.Types (parse)
-import Data.ByteString (ByteString)
-import qualified Data.ByteString.Lazy as LBS
-import qualified Data.ByteString.UTF8 as BSU
-import Network.HTTP.Client
-import Network.HTTP.Client.TLS
-import Network.HTTP.Types.Status
-import System.Environment (lookupEnv)
+import Data.Aeson.Types (parse, Parser)
 
-import SimFin.Util
+#if MIN_VERSION_aeson(2,0,0)
+import qualified Data.Aeson.Key as K
+import qualified Data.Aeson.KeyMap as KM
+#else
+import qualified Data.HashMap.Strict as HM
+#endif
+
+import Data.ByteString (ByteString)
+import qualified Data.ByteString.Char8 as BS8
+import qualified Data.ByteString.Lazy as LBS
+import Data.Functor.Syntax
+import Data.Text (Text)
+import qualified Data.Text.Encoding as T
+import Network.HTTP.Client
+import Network.HTTP.Types.Status
 
 data SimFinContext = SimFinContext
   { simFinApiKey :: ByteString
   , simFinManager :: Manager
   }
-
-apiKeyEnvVariable :: String
-apiKeyEnvVariable = "SIM_FIN_API_KEY"
-
-createDefaultContext :: (MonadFail m, MonadIO m) => m SimFinContext
-createDefaultContext = do
-  manager <- newTlsManager
-  apiKeyOpt <- liftIO $ lookupEnv apiKeyEnvVariable
-  case apiKeyOpt of
-    Nothing -> fail $ "Couldn't find environment variable '" <> apiKeyEnvVariable <> "'"
-    Just apiKey -> pure $ SimFinContext (BSU.fromString apiKey) manager
 
 baseRequest :: Request
 baseRequest = defaultRequest
@@ -83,3 +85,52 @@ performGenericRequest mkDecodeErr mkParseErr SimFinContext{..} path query = do
       _ -> case parse parseJSON value of
         Error err -> Left $ mkParseErr value err
         Success a -> Left a
+
+type QueryParam = (ByteString, Maybe ByteString)
+
+#if MIN_VERSION_aeson(2,0,0)
+
+toKey :: Text -> Key
+toKey = K.fromText
+
+toObject :: [(K.Key, Value)] -> Value
+toObject = Object . KM.fromList
+
+#else
+
+toKey :: Text -> Text
+toKey = id
+
+toObject :: [(Text, Value)] -> Value
+toObject = Object . HM.fromList 
+
+#endif
+
+createKeyedRow :: Value -> Parser Value
+createKeyedRow = withObject "Root" $ \root -> do
+  cols <- toKey <$$> root .: "columns"
+  row <- root .: "data"
+  pure $ toObject $ zip cols row
+
+createKeyedRows :: Value -> Parser [Value]
+createKeyedRows = withObject "Root" $ \root -> do
+  cols <- toKey <$$> root .: "columns"
+  rows <- root .: "data"
+  pure $ toObject . zip cols <$> rows
+
+toCommaQueryParam :: ByteString -> (a -> ByteString) -> [a] -> [QueryParam]
+toCommaQueryParam key f as = case as of
+  [] -> []
+  _ -> [(key, Just $ BS8.intercalate "," $ f <$> as)]
+
+-- Chars are truncated to 8-bits
+toShownCommaQueryParam :: Show a => ByteString -> [a] -> [QueryParam]
+toShownCommaQueryParam key = toCommaQueryParam key (BS8.pack . show)
+
+toTextCommaQueryParam :: ByteString -> [Text] -> [QueryParam]
+toTextCommaQueryParam key = toCommaQueryParam key T.encodeUtf8
+
+toBoolQueryParam :: ByteString -> Bool -> [QueryParam]
+toBoolQueryParam key b = case b of
+  False -> []
+  True -> [(key, Nothing)]

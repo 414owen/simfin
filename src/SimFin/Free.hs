@@ -62,11 +62,14 @@ import SimFin.Types.PricesQuery
 import SimFin.Types.ProfitAndLoss
 import SimFin.Types.StatementQuery
 import SimFin.Types.StockRef
+import SimFin.Util
 
 
 ------
 -- General Company Info
 ------
+
+-- | Fetch general company information. See the [SimFin docs](https://simfin.com/api/v2/documentation/#tag/Company/paths/~1companies~1general/get).
 
 fetchCompanyInfo
   :: (MonadThrow m, MonadIO m)
@@ -82,6 +85,10 @@ fetchCompanyInfo ctx refs = do
 -- Balance Sheets
 ------
 
+-- | Fetch a company's balance sheet statement. As this is the free API version, only one statement
+-- | is returned. The returned statement's data is dependent on the company type.
+-- | See the [SimFin docs](https://simfin.com/api/v2/documentation/#tag/Company/paths/~1companies~1statements/get).
+
 fetchBalanceSheet
   :: (MonadThrow m, MonadIO m)
   => SimFinContext
@@ -95,6 +102,10 @@ fetchBalanceSheet ctx query = do
 ------
 -- P&L
 ------
+
+-- | Fetch a company's profit and loss statement. As this is the free API version, only one statement
+-- | is returned. The returned statement's data is dependent on the company type.
+-- | See the [SimFin docs](https://simfin.com/api/v2/documentation/#tag/Company/paths/~1companies~1statements/get).
 
 fetchProfitAndLoss
   :: (MonadThrow m, MonadIO m)
@@ -110,6 +121,10 @@ fetchProfitAndLoss ctx query = do
 -- Cash Flows
 ------
 
+-- | Fetch a company's cash flow statement. As this is the free API version, only one statement
+-- | is returned. The returned statement's data is dependent on the company type.
+-- | See the [SimFin docs](https://simfin.com/api/v2/documentation/#tag/Company/paths/~1companies~1statements/get).
+
 fetchCashFlow
   :: (MonadThrow m, MonadIO m)
   => SimFinContext
@@ -124,6 +139,10 @@ fetchCashFlow ctx query = do
 -- Derived
 ------
 
+-- | Fetch a company's derived figures. As this is the free API version, only one set
+-- | of data is returned.
+-- | See the [SimFin docs](https://simfin.com/api/v2/documentation/#tag/Company/paths/~1companies~1statements/get).
+
 fetchDerived
   :: forall m a. (Read a, RealFrac a, MonadThrow m, MonadIO m)
   => SimFinContext
@@ -137,6 +156,8 @@ fetchDerived ctx query = do
 ------
 -- Prices
 ------
+
+-- | Fetch a company's historical share prices. See the [SimFin docs](https://simfin.com/api/v2/documentation/#tag/Company/paths/~1companies~1prices/get).
 
 fetchPrices
   :: (Read a, RealFrac a, MonadThrow m, MonadIO m)

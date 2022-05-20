@@ -18,7 +18,6 @@ import qualified Data.Text as T
 
 import SimFin.Internal
 import SimFin.Types.CompanyListing
-import SimFin.Util
 
 
 data ApiError

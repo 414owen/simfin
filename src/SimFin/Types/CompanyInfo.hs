@@ -10,7 +10,7 @@ import Data.Aeson
 import Data.Aeson.Types (Parser)
 import Data.Text (Text)
 
-import SimFin.Util
+import SimFin.Internal
 
 data CompanyInfoRow
   = CompanyInfoRow

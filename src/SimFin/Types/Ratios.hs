@@ -1,3 +1,11 @@
+{-|
+Module      : SimFin.Types.Ratios
+Description : Ratios derived from a business' financial statements.
+Copyright   : (c) Owen Shepherd, 2022
+License     : MIT
+Maintainer  : owen@owen.cafe
+-}
+
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -9,6 +17,9 @@ module SimFin.Types.Ratios
 import Data.Aeson
 
 import SimFin.Types.StringFrac
+
+-- | Record modelling the result of calling the share price API endpoint with the "&ratios"
+-- | query parameter. See the [SimFin docs](https://simfin.com/api/v2/documentation/#tag/Company/paths/~1companies~1prices/get).
 
 data RatiosRow a
   = RatiosRow

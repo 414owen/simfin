@@ -13,7 +13,7 @@ import Data.Text (Text)
 import Data.Time.Calendar (Day)
 
 import SimFin.Types.StringFrac
-import SimFin.Util
+import SimFin.Internal
 
 data PricesRow a
   = PricesRow
