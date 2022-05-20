@@ -6,7 +6,7 @@ mkDerivation {
   src = ./.;
   isLibrary = false;
   isExecutable = true;
-  devTools = [
+  buildTools = [
     hlint
   ];
   executableHaskellDepends = [

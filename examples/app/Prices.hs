@@ -20,12 +20,6 @@ import SimFin.Free
 to5pm :: Day -> LocalTime
 to5pm = flip LocalTime $ dayFractionToTimeOfDay $ 17 / 24
 
-day2015 :: Day
-day2015 = fromGregorian 2015 01 01
-
-after2014 :: [PricesRow a] -> [PricesRow a]
-after2014 = filter ((> Just day2015) . date)
-
 toDataPoint :: PricesRow Double -> Maybe (LocalTime, Double)
 toDataPoint row = do
   day <- date row
@@ -36,10 +30,11 @@ stonks = ["GOOG", "AAPL", "TWTR", "NFLX"]
 
 type LineData = (String, [(LocalTime, Double)])
 
-toLine :: [PricesRow Double] -> LineData
-toLine pts@(PricesRow{ticker = t} : xs) =
+toLine :: [PricesRow Double] -> Maybe LineData
+toLine [] = Nothing
+toLine pts@(PricesRow{ticker = t} : _) = Just
   ( T.unpack t
-  , catMaybes $ toDataPoint <$> after2014 pts
+  , catMaybes $ toDataPoint <$> pts
   )
 
 main :: IO ()
@@ -47,7 +42,7 @@ main = do
   ctx <- createDefaultContext
 
   pricesRes :: [ApiResult [PricesRow Double]] <- traverse (fetchPrices ctx) stonks
-  let prices :: [LineData] = toLine <$> rights pricesRes
+  let prices :: [LineData] = catMaybes $ toLine <$> rights pricesRes
 
   toFile def "prices.svg" $ do
     layout_title .= "Price History"

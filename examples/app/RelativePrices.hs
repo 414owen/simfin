@@ -1,6 +1,7 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TupleSections #-}
 
 module Main
   ( main
@@ -36,9 +37,6 @@ type LineData = (String, NonEmpty LinePt)
 to5pm :: Day -> LocalTime
 to5pm = flip LocalTime $ dayFractionToTimeOfDay $ 17 / 24
 
-day2015 :: LocalTime
-day2015 = LocalTime (fromGregorian 2015 01 01) midnight
-
 ptsAfter :: LocalTime -> NonEmpty LinePt -> Maybe (NonEmpty LinePt)
 ptsAfter t = NE.nonEmpty . filter ((>= t) . fst) . NE.toList
 
@@ -56,7 +54,7 @@ afterCommonStart :: [LineData] -> [LineData]
 afterCommonStart ls = catMaybes $ traverse (ptsAfter $ lastStart ls) <$> ls
 
 scaleToRelative :: NonEmpty LinePt -> NonEmpty LinePt
-scaleToRelative xs@((_, x) :| _) = (second ((/ x) . (* 100))) <$> xs
+scaleToRelative xs@((_, x) :| _) = second ((/ x) . (* 100)) <$> xs
 
 toLines :: [[PricesRow Double]] -> [LineData]
 toLines pts = fmap (second scaleToRelative)
