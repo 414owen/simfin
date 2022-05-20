@@ -13,9 +13,7 @@ let
 
   variant = if doBenchmark then pkgs.haskell.lib.doBenchmark else pkgs.lib.id;
 
-  drv = variant (haskellPackages.callPackage f {
-    simfin = pkgs.haskell.lib.dontCheck (haskellPackages.callPackage simfin {});
-  });
+  drv = variant (haskellPackages.callPackage f { });
 
 in
 
