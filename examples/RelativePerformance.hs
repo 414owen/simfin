@@ -69,7 +69,7 @@ main = do
   pricesRes :: [ApiResult [PricesRow Double]] <- traverse (fetchPrices ctx) stonks
   let prices :: [LineData] = toLines $ rights pricesRes
 
-  toFile def "relative-prices.svg" $ do
+  toFile def "relative-performance.svg" $ do
     layout_title .= "Relative Performance"
     layout_background .= solidFillStyle (opaque white)
     layout_foreground .= opaque black
