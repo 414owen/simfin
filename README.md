@@ -8,10 +8,11 @@ Pre-alpha, expect frequent breaking changes.
 
 ## Examples
 
-These charts were produced using code in the `examples` repository:
+These charts were produced using code in the `examples` repository:  
 
-![prices](https://user-images.githubusercontent.com/1714287/169410772-021b0d73-1b75-448a-b11f-2f53ae3f78bd.svg)
-![relative-eps](https://user-images.githubusercontent.com/1714287/169545083-7c1fac59-9e82-4342-9d83-423317d3de69.svg)
+![prices](https://user-images.githubusercontent.com/1714287/169568674-1bf54e8f-5602-4ee8-8e00-6e88c1a7b17f.svg)
+![eps-diluted](https://user-images.githubusercontent.com/1714287/169568597-937a1c85-d1e2-4c3f-8667-64daf54c24c0.svg)
+![relative-performance](https://user-images.githubusercontent.com/1714287/169568604-ca15c7be-1053-436c-a106-0ed2d62f9b8c.svg)
 
 ## TODO:
 
