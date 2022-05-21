@@ -1,3 +1,11 @@
+{-|
+Module      : SimFin.Types.Prices
+Description : Type to represent a combination of SimFin prices and ratios.
+Copyright   : (c) Owen Shepherd, 2022
+License     : MIT
+Maintainer  : owen@owen.cafe
+-}
+
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -12,6 +20,8 @@ import Data.Aeson
 import SimFin.Types.Prices
 import SimFin.Types.Ratios
 import SimFin.Internal
+
+-- | Represents a company's prices and ratios.
 
 data PricesAndRatiosRow a
   = PricesAndRatiosRow

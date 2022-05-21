@@ -1,3 +1,11 @@
+{-|
+Module      : SimFin.Plus
+Description : SimFin+ API.
+Copyright   : (c) Owen Shepherd, 2022
+License     : MIT
+Maintainer  : owen@owen.cafe
+-}
+
 {-# LANGUAGE OverloadedStrings #-}
 
 module SimFin.Plus

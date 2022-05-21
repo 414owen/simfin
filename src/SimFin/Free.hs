@@ -1,3 +1,11 @@
+{-|
+Module      : SimFin.Free
+Description : SimFin Free API.
+Copyright   : (c) Owen Shepherd, 2022
+License     : MIT
+Maintainer  : owen@owen.cafe
+-}
+
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 

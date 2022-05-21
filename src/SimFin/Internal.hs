@@ -37,6 +37,8 @@ import qualified Data.Text.Encoding as T
 import Network.HTTP.Client
 import Network.HTTP.Types.Status
 
+-- | The context needed to call every fetch* function.
+
 data SimFinContext = SimFinContext
   { simFinApiKey :: ByteString
   , simFinManager :: Manager

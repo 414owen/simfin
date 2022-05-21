@@ -1,3 +1,11 @@
+{-|
+Module      : SimFin.Types.PricesQuery
+Description : Types to represent SimFin price queries.
+Copyright   : (c) Owen Shepherd, 2022
+License     : MIT
+Maintainer  : owen@owen.cafe
+-}
+
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
@@ -16,6 +24,10 @@ import Data.Time.Calendar (Day)
 import SimFin.Types.StockRef
 import SimFin.Internal
 
+-- | This represents all options the prices endpoint supports.
+-- | Some of these parameters are only available to SimFin+ users.
+-- | For free users, please use 'PricesQueryFree'.
+
 data PricesQuery
   = PricesQuery
   { stockRefs :: NonEmpty StockRef
@@ -24,7 +36,11 @@ data PricesQuery
   , asReported :: Bool
   } deriving Show
 
+-- | Represents all the parameters available to free users.
+
 type PricesQueryFree = StockRef
+
+-- | Turn a 'PricesQuery' into query parameters for the SimFin "prices" endpoint.
 
 pricesQueryToQueryParams :: PricesQuery -> [QueryParam]
 pricesQueryToQueryParams PricesQuery{..} = 
@@ -49,6 +65,8 @@ freeToPlus stockRef
   , end = Nothing
   , asReported = False
   }
+
+-- | Turn a 'PricesQueryFree' into query parameters for the SimFin "prices" endpoint.
 
 pricesQueryFreeToQueryParams :: PricesQueryFree -> [QueryParam]
 pricesQueryFreeToQueryParams = pricesQueryToQueryParams . freeToPlus

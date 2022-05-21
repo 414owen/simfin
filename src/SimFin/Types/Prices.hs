@@ -1,3 +1,11 @@
+{-|
+Module      : SimFin.Types.Prices
+Description : Types to represent SimFin price results.
+Copyright   : (c) Owen Shepherd, 2022
+License     : MIT
+Maintainer  : owen@owen.cafe
+-}
+
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -14,6 +22,8 @@ import Data.Time.Calendar (Day)
 
 import SimFin.Types.StringFrac
 import SimFin.Internal
+
+-- | Prices of a company over a single day. 
 
 data PricesRow a
   = PricesRow
@@ -43,6 +53,8 @@ instance (Read a, RealFrac a) => FromJSON (PricesRow a) where
     <*> v .: "Volume"
     <*> v .: "Dividend"
     <*> v .: "Common Shares Outstanding"
+
+-- | Wrapper to parse a PricesRow record from SimFin's JSON format.
 
 newtype PricesKeyed a = PricesKeyed { unKeyPrices :: [PricesRow a] }
 

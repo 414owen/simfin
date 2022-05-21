@@ -1,3 +1,11 @@
+{-|
+Module      : SimFin.Types.Derived
+Description : Types to represent SimFin derived figures.
+Copyright   : (c) Owen Shepherd, 2022
+License     : MIT
+Maintainer  : owen@owen.cafe
+-}
+
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -14,6 +22,8 @@ import Data.Time.Calendar (Day)
 import SimFin.Types.StringFrac
 import SimFin.Types.FiscalPeriod
 import SimFin.Internal
+
+-- | Cash flow statement for general companies. 
 
 data DerivedRow a
   = DerivedRow
@@ -89,6 +99,8 @@ instance (Read a, RealFrac a) => FromJSON (DerivedRow a) where
     <*> v .: "Dividend Payout Ratio"
     <*> v .: "Net Debt / EBITDA"
     <*> v .: "Net Debt / EBIT"
+
+-- | Wrapper to parse a DerivedRow record from SimFin's JSON format.
 
 newtype DerivedRowsKeyed a = DerivedRowsKeyed { unDerivedRows :: [DerivedRow a] }
 
