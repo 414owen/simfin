@@ -28,10 +28,13 @@ module SimFin.Plus
   , InsuranceCashFlowRow(..)
 
   , DerivedRow(..)
-
   , PricesRow(..)
   , RatiosRow(..)
+
   , PricesAndRatiosRow(..)
+
+  , PricesQuery(..)
+  , StatementQuery(..)
 
   , StockRef(..)
   , FiscalPeriod(..)
