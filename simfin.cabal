@@ -1,6 +1,6 @@
 cabal-version:      2.4
 name:               simfin
-version:            0.1.0
+version:            1.0.0
 synopsis:           A library to fetch and parse data from the SimFin(+) API.
 homepage:           https://github.com/414owen/simfin
 license:            MIT
@@ -8,6 +8,7 @@ license-file:       LICENSE
 author:             Owen Shepherd
 maintainer:         owen@owen.cafe
 category:           Web
+extra-source-files: CHANGELOG.md
 description:
 
     This library aims to wrap the [SimFin(+)](https://simfin.com/) API
