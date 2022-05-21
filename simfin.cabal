@@ -70,9 +70,9 @@ common examples-common
     build-depends:    base >= 4.13.0.0 && < 5
                     , simfin
                     , time
-                    , Chart >= 1.9
+                    , Chart >= 1.9.3 && < 1.9.4
                     , SVGFonts < 1.8
-                    , Chart-diagrams >= 1.9
+                    , Chart-diagrams >= 1.9.3 && < 1.9.4
                     , text
                     , simfin
 
