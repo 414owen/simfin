@@ -25,8 +25,8 @@ import SimFin.Types.StockRef
 import SimFin.Internal
 
 -- | This represents all options the prices endpoint supports.
--- | Some of these parameters are only available to SimFin+ users.
--- | For free users, please use 'PricesQueryFree'.
+-- Some of these parameters are only available to SimFin+ users.
+-- For free users, please use 'PricesQueryFree'.
 
 data PricesQuery
   = PricesQuery

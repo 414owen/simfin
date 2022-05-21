@@ -20,7 +20,8 @@ import Data.Text (Text)
 
 import SimFin.Internal
 
--- | Genreal information about a company. See the [SimFin docs](https://simfin.com/api/v2/documentation/#tag/Company/paths/~1companies~1general/get).
+-- | Genreal information about a company.
+-- See the [SimFin docs](https://simfin.com/api/v2/documentation/#tag/Company/paths/~1companies~1general/get).
 
 data CompanyInfoRow
   = CompanyInfoRow

@@ -81,7 +81,8 @@ import SimFin.Util
 -- General Company Info
 ------
 
--- | Fetch general company information. See the [SimFin docs](https://simfin.com/api/v2/documentation/#tag/Company/paths/~1companies~1general/get).
+-- | Fetch general company information.
+-- See the [SimFin docs](https://simfin.com/api/v2/documentation/#tag/Company/paths/~1companies~1general/get).
 
 fetchCompanyInfo
   :: (MonadThrow m, MonadIO m)
@@ -96,7 +97,7 @@ fetchCompanyInfo ctx refs =
 ------
 
 -- | Fetch a company's balance sheet statements.
--- | See the [SimFin docs](https://simfin.com/api/v2/documentation/#tag/Company/paths/~1companies~1statements/get).
+-- See the [SimFin docs](https://simfin.com/api/v2/documentation/#tag/Company/paths/~1companies~1statements/get).
 
 fetchBalanceSheets
   :: (MonadThrow m, MonadIO m)
@@ -112,7 +113,7 @@ fetchBalanceSheets ctx query =
 ------
 
 -- | Fetch a company's profit and loss statements.
--- | See the [SimFin docs](https://simfin.com/api/v2/documentation/#tag/Company/paths/~1companies~1statements/get).
+-- See the [SimFin docs](https://simfin.com/api/v2/documentation/#tag/Company/paths/~1companies~1statements/get).
 
 fetchProfitsAndLosses
   :: (MonadThrow m, MonadIO m)
@@ -128,7 +129,7 @@ fetchProfitsAndLosses ctx query =
 ------
 
 -- | Fetch a company's cash flow statements.
--- | See the [SimFin docs](https://simfin.com/api/v2/documentation/#tag/Company/paths/~1companies~1statements/get).
+-- See the [SimFin docs](https://simfin.com/api/v2/documentation/#tag/Company/paths/~1companies~1statements/get).
 
 fetchCashFlows
   :: (MonadThrow m, MonadIO m)
@@ -144,7 +145,7 @@ fetchCashFlows ctx query =
 ------
 
 -- | Fetch a company's derived figures.
--- | See the [SimFin docs](https://simfin.com/api/v2/documentation/#tag/Company/paths/~1companies~1statements/get).
+-- See the [SimFin docs](https://simfin.com/api/v2/documentation/#tag/Company/paths/~1companies~1statements/get).
 
 fetchDerived
   :: (Read a, RealFrac a, MonadThrow m, MonadIO m)
@@ -159,7 +160,8 @@ fetchDerived ctx query =
 -- Prices
 ------
 
--- | Fetch a company's historical share prices. See the [SimFin docs](https://simfin.com/api/v2/documentation/#tag/Company/paths/~1companies~1prices/get).
+-- | Fetch a company's historical share prices.
+-- See the [SimFin docs](https://simfin.com/api/v2/documentation/#tag/Company/paths/~1companies~1prices/get).
 
 fetchPrices
   :: (Read a, RealFrac a, MonadThrow m, MonadIO m)
@@ -170,7 +172,8 @@ fetchPrices ctx query =
   mconcat . fmap unKeyPrices <$$> performRequest ctx "companies/prices"
     (pricesQueryToQueryParams query)
 
--- | Fetch a company's historical share prices, along with key ratios. See the [SimFin docs](https://simfin.com/api/v2/documentation/#tag/Company/paths/~1companies~1prices/get).
+-- | Fetch a company's historical share prices, along with key ratios.
+-- See the [SimFin docs](https://simfin.com/api/v2/documentation/#tag/Company/paths/~1companies~1prices/get).
 
 fetchPricesAndRatios
   :: (Read a, RealFrac a, MonadThrow m, MonadIO m)

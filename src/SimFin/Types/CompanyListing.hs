@@ -28,7 +28,7 @@ data CompanyListingRow
   } deriving Show
 
 -- | Wrapper to parse a CompanyListing record from SimFin's JSON format.
--- | You probably don't want to use this.
+-- You probably don't want to use this.
 
 newtype CompanyListingKeyed = CompanyListingKeyed { unKeyCompanyListing :: [CompanyListingRow] }
 

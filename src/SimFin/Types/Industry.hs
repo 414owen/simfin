@@ -37,7 +37,7 @@ invertIndustry ind = case ind of
   Insurance cs -> Insurance <$> cs
 
 -- | List of discriminations of lists to list of discriminations.
--- | Used to removing extra nesting from the statements API results.
+-- Used to removing extra nesting from the statements API results.
 
 invertIndustries :: [Industry [a] [b] [c]] -> [Industry a b c]
 invertIndustries = fold . fmap invertIndustry

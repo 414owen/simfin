@@ -26,11 +26,11 @@ import SimFin.Types.StockRef
 import SimFin.Internal
 
 -- | This represents all options the statement endpoint supports, minus the "statement"
--- | parameter itself, which is set by simply calling the right function.
--- | Some of these parameters are only available to SimFin+ users.
--- | For free users, please use 'StatementQueryFree'.
--- | If you provide a zero-length list for any field, the query parameter will be omitted,
--- | and the API will try to return all relevant available statements.
+-- parameter itself, which is set by simply calling the right function.
+-- Some of these parameters are only available to SimFin+ users.
+-- For free users, please use 'StatementQueryFree'.
+-- If you provide a zero-length list for any field, the query parameter will be omitted,
+-- and the API will try to return all relevant available statements.
 
 data StatementQuery
   = StatementQuery
@@ -71,7 +71,7 @@ statementQueryToQueryParams StatementQuery{..} =
     ]
 
 -- | This is a subset of the StatementQuery type, which models the parameters available
--- | to non-SimFin+ users.
+-- to non-SimFin+ users.
 
 data StatementQueryFree
   = StatementQueryFree

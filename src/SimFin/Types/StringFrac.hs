@@ -17,8 +17,8 @@ import qualified Data.Text as T
 import Text.Read (readEither)
 
 -- | Wrapper that parses the string '"1.23"' and the number '1.23' the same.
--- | Uses the read instance for the 'String', and 'realToFrac' (from 'Data.Scientific.Scientific')
--- | for the number.
+-- Uses the read instance for the 'String', and 'realToFrac' ('Data.Scientific.Scientific' -> a)
+-- for the number.
 
 newtype StringFrac a = StringFrac { unStringFrac :: a }
   deriving Show

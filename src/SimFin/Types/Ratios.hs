@@ -18,8 +18,8 @@ import Data.Aeson
 
 import SimFin.Types.StringFrac
 
--- | Record modelling the result of calling the share price API endpoint with the "&ratios"
--- | query parameter. See the [SimFin docs](https://simfin.com/api/v2/documentation/#tag/Company/paths/~1companies~1prices/get).
+-- | Record modelling the extra data returned by calling the share price API endpoint with the "&ratios"
+-- query parameter. See the [SimFin docs](https://simfin.com/api/v2/documentation/#tag/Company/paths/~1companies~1prices/get).
 
 data RatiosRow a
   = RatiosRow

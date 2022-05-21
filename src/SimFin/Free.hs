@@ -94,8 +94,8 @@ fetchCompanyInfo ctx refs = do
 ------
 
 -- | Fetch a company's balance sheet statement. As this is the free API version, only one statement
--- | is returned. The returned statement's data is dependent on the company type.
--- | See the [SimFin docs](https://simfin.com/api/v2/documentation/#tag/Company/paths/~1companies~1statements/get).
+-- is returned. The returned statement's data is dependent on the company type.
+-- See the [SimFin docs](https://simfin.com/api/v2/documentation/#tag/Company/paths/~1companies~1statements/get).
 
 fetchBalanceSheet
   :: (MonadThrow m, MonadIO m)
@@ -112,8 +112,8 @@ fetchBalanceSheet ctx query = do
 ------
 
 -- | Fetch a company's profit and loss statement. As this is the free API version, only one statement
--- | is returned. The returned statement's data is dependent on the company type.
--- | See the [SimFin docs](https://simfin.com/api/v2/documentation/#tag/Company/paths/~1companies~1statements/get).
+-- is returned. The returned statement's data is dependent on the company type.
+-- See the [SimFin docs](https://simfin.com/api/v2/documentation/#tag/Company/paths/~1companies~1statements/get).
 
 fetchProfitAndLoss
   :: (MonadThrow m, MonadIO m)
@@ -130,8 +130,8 @@ fetchProfitAndLoss ctx query = do
 ------
 
 -- | Fetch a company's cash flow statement. As this is the free API version, only one statement
--- | is returned. The returned statement's data is dependent on the company type.
--- | See the [SimFin docs](https://simfin.com/api/v2/documentation/#tag/Company/paths/~1companies~1statements/get).
+-- is returned. The returned statement's data is dependent on the company type.
+-- See the [SimFin docs](https://simfin.com/api/v2/documentation/#tag/Company/paths/~1companies~1statements/get).
 
 fetchCashFlow
   :: (MonadThrow m, MonadIO m)
@@ -148,8 +148,8 @@ fetchCashFlow ctx query = do
 ------
 
 -- | Fetch a company's derived figures. As this is the free API version, only one set
--- | of data is returned.
--- | See the [SimFin docs](https://simfin.com/api/v2/documentation/#tag/Company/paths/~1companies~1statements/get).
+-- of data is returned.
+-- See the [SimFin docs](https://simfin.com/api/v2/documentation/#tag/Company/paths/~1companies~1statements/get).
 
 fetchDerived
   :: forall m a. (Read a, RealFrac a, MonadThrow m, MonadIO m)

@@ -27,8 +27,8 @@ import qualified Data.Text as T
 import SimFin.Internal
 import SimFin.Types.CompanyListing
 
--- | Represents all the types of error the server returns, or we can encounter
--- | on our side.
+-- | Represents all the types of error the server returns, and that we can encounter
+-- on our side.
 
 data ApiError
   -- | Can't turn ByteString into JSON
@@ -71,7 +71,7 @@ performRequest = performGenericRequest DecodeError ParseError
 ------
 
 -- | Fetch a list of company tickers and SimFin ids.
--- | This is the only endpoint common to free and paid customers.
+-- This is the only endpoint common to free and paid customers.
 
 fetchCompanyList
   :: (MonadThrow m, MonadIO m)

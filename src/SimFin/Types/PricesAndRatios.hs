@@ -35,7 +35,7 @@ instance (Read a, RealFrac a) => FromJSON (PricesAndRatiosRow a) where
     <*> parseJSON v
 
 -- | Wrapper to parse a PricesAndRatiosRow record from SimFin's JSON format.
--- | You probably don't want to use this.
+-- You probably don't want to use this.
 
 newtype PricesAndRatiosKeyed a = PricesAndRatiosKeyed { unKeyPricesAndRatios :: [PricesAndRatiosRow a] }
 
