@@ -5,8 +5,6 @@
 
 See [simfin.com](https://simfin.com/)
 
-Pre-alpha, expect frequent breaking changes.
-
 ## Examples
 
 These charts were produced using code in the `examples` repository:  
