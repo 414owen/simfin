@@ -1,7 +1,7 @@
 # SimFin API wrapper for Haskell
 
 [![Build Status](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2F414owen%2Fsimfin%2Fbadge&style=flat)](https://actions-badge.atrox.dev/414owen/simfin/goto)
-![Hackage](https://img.shields.io/hackage/v/simfin)
+[![Hackage](https://img.shields.io/hackage/v/simfin)](https://hackage.haskell.org/package/simfin)
 
 See [simfin.com](https://simfin.com/)
 
